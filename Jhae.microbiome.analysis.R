@@ -153,8 +153,8 @@ setwd("~/Documents/3.research/Jhae.microbiome")
     mutate(across(Kingdom:Species, ~ na_if(., ""))) |>
     
     # Move ASV IDs to row names and convert to a character matrix
-    column_to_rownames(var = "feature.id") |>
-    select(-confidence) |> 
+    column_to_rownames(var = "feature.id") |> 
+    dplyr::select(-confidence) |> 
     as.matrix()
   
   TAX_obj <- tax_table(cleaned_tax_matrix)
@@ -186,7 +186,6 @@ setwd("~/Documents/3.research/Jhae.microbiome")
     !(Family %in% c("Chloroplast", "Mitochondria", "Propionibacteriaceae")) &
     !(Genus %in% "Wolbachia")
   )
-  
   
   # Remove ASVs with zero counts across all samples.
   ps <- prune_taxa(taxa_sums(ps) > 0, ps)
@@ -432,7 +431,7 @@ setwd("~/Documents/3.research/Jhae.microbiome")
     Prevalence = taxa_sums(ps_bv_pa) / nsamples(ps_bv_pa),
     as(tax_table(ps_bv), "matrix") # Attaches the taxonomy
   ) |> 
-    select(-Kingdom)
+    dplyr::select(-Kingdom)
   
   # Sort the table by highest Mean Abundance (and then by Prevalence)
   bv_summary_sorted <- bv_summary[order(-bv_summary$Mean_Abundance, -bv_summary$Prevalence), ]
@@ -452,7 +451,7 @@ setwd("~/Documents/3.research/Jhae.microbiome")
     Prevalence = taxa_sums(ps_grt_july_pa) / nsamples(ps_grt_july_pa),
     as(tax_table(ps_grt_july), "matrix")
   ) |> 
-    select(-Kingdom)
+    dplyr::select(-Kingdom)
   
   grt_july_summary_sorted <- grt_july_summary[order(-grt_july_summary$Mean_Abundance, -grt_july_summary$Prevalence), ]
   
@@ -525,6 +524,105 @@ setwd("~/Documents/3.research/Jhae.microbiome")
   )
   
 }
+
+
+################################################################################
+# Prevalence vs. abundance for each host plant
+{
+  # Transform to relative abundance for the plot
+  ps_july_rel <- transform_sample_counts(ps_july, function(x) x / sum(x))
+  
+  # Extract sample names for each host plant
+  bv_samples <- sample_names(subset_samples(ps_july_rel, host_plant == "BV"))
+  grt_samples <- sample_names(subset_samples(ps_july_rel, host_plant == "GRT"))
+  
+  # Extract the OTU matrix
+  otu_matrix <- as(otu_table(ps_july_rel), "matrix")
+  
+  # Function to calculate prevalence and mean abundance
+  prevalence.and.abundance <- function(mat, samples, host_name) {
+    sub_mat <- mat[, samples, drop = FALSE]
+    
+    data.frame(
+      ASV = rownames(sub_mat),
+      Mean_Abundance = rowMeans(sub_mat),
+      Prevalence = rowSums(sub_mat > 0) / length(samples),
+      host_plant = host_name
+    ) |>
+      filter(Prevalence > 0) # Drop ASVs completely absent in this host
+  }
+  
+  # Calculate metrics for both groups and combine
+  df_bv <- prevalence.and.abundance(otu_matrix, bv_samples, "BV")
+  df_grt <- prevalence.and.abundance(otu_matrix, grt_samples, "GRT")
+  plot_df <- bind_rows(df_bv, df_grt) |> 
+    mutate(host_plant = str_replace(host_plant, "BV", "C. corindum")) |> 
+    mutate(host_plant = str_replace(host_plant, "GRT", "K. paniculata")) 
+  
+  # Extract taxonomy to create clean labels
+  taxa_matrix <- as.data.frame(as(tax_table(ps_july_rel), "matrix")) |>
+    rownames_to_column("ASV")
+  
+  plot_df <- plot_df |>
+    left_join(taxa_matrix, by = "ASV") |>
+    mutate(Taxa_Label = case_when(
+      !is.na(Genus) & Genus != "NA" ~ paste0(Genus, "\n(", substr(ASV, 1, uuid.abbrev), ")"),
+      !is.na(Family) & Family != "NA" ~ paste0(Family, "\n(", substr(ASV, 1, uuid.abbrev), ")"),
+      !is.na(Order) & Order != "NA" ~ paste0(Order, "\n(", substr(ASV, 1, uuid.abbrev), ")"),
+      !is.na(Class) & Class != "NA" ~ paste0(Class, "\n(", substr(ASV, 1, uuid.abbrev), ")"),
+      !is.na(Phylum) & Class != "NA" ~ paste0(Phylum, "\n(", substr(ASV, 1, uuid.abbrev), ")"),
+      TRUE ~ paste0("Unclassified\n(", substr(ASV, 1, uuid.abbrev), ")")
+    ))
+  
+  # Identify the top ASVs per host plant based on mean abundance
+  top_asvs <- plot_df |>
+    group_by(host_plant) |>
+    slice_max(order_by = Mean_Abundance, n = 10) |>
+    ungroup()
+  
+  # Color code the top ASVs
+  plot_df <- plot_df |>
+    mutate(highlight = ifelse(ASV %in% top_asvs$ASV, "Highlight", "Other"))
+  
+  # Build the plot
+  pa_by_host_plot <- plot_df |> 
+    ggplot(aes(x = Mean_Abundance, y = Prevalence)) +
+    geom_point(aes(color = highlight, alpha = highlight), size = 2.5) +
+    scale_color_manual(values = c("Highlight" = "#d95f02", "Other" = "grey60")) +
+    scale_alpha_manual(values = c("Highlight" = 1, "Other" = 0.5)) +
+    facet_wrap(~ host_plant) +
+    scale_x_log10(labels = scales::percent_format(accuracy = 0.01)) +
+    # scale_y_log10(labels = scales::percent_format(accuracy = 0.01)) +
+    scale_y_continuous(labels = scales::percent_format()) +
+    geom_text_repel(
+      data = top_asvs,
+      aes(label = Taxa_Label),
+      size = 3.5,
+      fontface = "italic",
+      box.padding = 0.5, point.padding = 0.3, 
+      force = 4, max.overlaps = Inf, 
+      color = "black",
+      segment.color = "grey50"
+    ) +
+    theme(
+      legend.position = "none",
+      strip.text = element_text(size = 12, face = "italic")
+    ) +
+    labs(
+      x = "Mean Relative Abundance (log10 scale)",
+      y = "Prevalence (% of Samples)"
+    ) +
+    coord_flip()
+}
+
+pa_by_host_plot
+
+ggsave(
+  filename = "plots/FigX.prevalence_vs_abundance_by_host.png", 
+  plot = pa_by_host_plot,
+  width = 6.5, height = 3.5, scale = 1.5, 
+  dpi = 600, bg = "white"
+)
 
 
 ################################################################################
@@ -745,29 +843,31 @@ setwd("~/Documents/3.research/Jhae.microbiome")
 }
 
 # PCoA Plots
-pcoa.bray.host <- plot_ordination(ps_july, ord_july_bray, color = "host_plant") +
-  theme_classic() +
-  theme(legend.position = "bottom") +
-  geom_point(size = 3, alpha = 0.8) +
-  scale_color_manual(name = "Host plant", values = color.by.plant) +
-  coord_fixed()
-pcoa.bray.host
-
-pcoa.uwUF.host <- plot_ordination(ps_july_tree, ord_july_uwUF, color = "host_plant") +
-  theme_classic() +
-  theme(legend.position = "bottom") +
-  geom_point(size = 3, alpha = 0.8) +
-  scale_color_manual(values = color.by.plant) +
-  coord_fixed()
-pcoa.uwUF.host
-
-pcoa.wUF.host <- plot_ordination(ps_july_tree, ord_july_wUF, color = "host_plant") +
-  theme_classic() +
-  theme(legend.position = "bottom") +
-  geom_point(size = 3, alpha = 0.8) +
-  scale_color_manual(values = color.by.plant) +
-  coord_fixed()
-pcoa.wUF.host
+{
+  pcoa.bray.host <- plot_ordination(ps_july, ord_july_bray, color = "host_plant") +
+    theme_classic() +
+    theme(legend.position = "bottom") +
+    geom_point(size = 3, alpha = 0.8) +
+    scale_color_manual(name = "Host plant", values = color.by.plant) +
+    coord_fixed()
+  pcoa.bray.host
+  
+  pcoa.uwUF.host <- plot_ordination(ps_july_tree, ord_july_uwUF, color = "host_plant") +
+    theme_classic() +
+    theme(legend.position = "bottom") +
+    geom_point(size = 3, alpha = 0.8) +
+    scale_color_manual(values = color.by.plant) +
+    coord_fixed()
+  pcoa.uwUF.host
+  
+  pcoa.wUF.host <- plot_ordination(ps_july_tree, ord_july_wUF, color = "host_plant") +
+    theme_classic() +
+    theme(legend.position = "bottom") +
+    geom_point(size = 3, alpha = 0.8) +
+    scale_color_manual(values = color.by.plant) +
+    coord_fixed()
+  pcoa.wUF.host
+}
 
 
 ##########
@@ -932,5 +1032,5 @@ write_delim(x, "collection.sites.tsv", delim = "\t")
 # - "GLM-PCA.R"
 # - "fastEmu.R"
 # - "MaAsLin3.R"
-# - "Map.of.field.sites.R"
+# - "field.site.map.R"
 

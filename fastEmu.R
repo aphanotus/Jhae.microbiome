@@ -232,9 +232,11 @@ ggsave(
 ################################################################################
 # Save the key objects
 save(
-  ps_july, metadata_july, fastEmu_fit_host_plant, fastEmu_host_results, 
+  ps_july, metadata_july, fastEmu_host_results, 
   fastEmu_host_results_for_plot, plot_fastEmu_volcano_host,
-  ps_grt, metadata_grt, fastEmu_fit_month, fastEmu_month_results,
+  ps_grt, metadata_grt, fastEmu_month_results,
+  # # the `fastEmuFit` objects themselves are too large for storage on GitHub
+  # fastEmu_fit_host_plant, fastEmu_fit_month,  
   fastEmu_month_results_for_plot, plot_fastEmu_volcano_month,
   fastEmu_figure,
   file = "Jhae.microbiome.fastEmu.RData"

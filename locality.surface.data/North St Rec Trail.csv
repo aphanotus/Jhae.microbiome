@@ -1,0 +1,18 @@
+﻿Type,"NLCD Code","Area (m²)","Coverage (%)","Active River Area (m²)"
+"Open Water",11,"17,932.48",1.80,"17,932.48"
+"Perennial Ice/Snow",12,0.00,0.00,0.00
+"Developed, Open Space",21,"101,318.50",10.14,"58,280.55"
+"Developed, Low Intensity",22,"364,925.93",36.54,"101,318.50"
+"Developed, Medium Intensity",23,"342,510.34",34.29,"85,179.27"
+"Developed, High Intensity",24,"30,485.21",3.05,"17,035.85"
+"Barren Land (Rock/Sand/Clay)",31,0.00,0.00,0.00
+"Deciduous Forest",41,"15,242.61",1.53,"4,483.12"
+"Evergreen Forest",42,"5,379.74",0.54,"5,379.74"
+"Mixed Forest",43,"24,208.85",2.42,"15,242.61"
+Shrub/Scrub,52,0.00,0.00,0.00
+Grassland/Herbaceous,71,0.00,0.00,0.00
+Pasture/Hay,81,0.00,0.00,0.00
+"Cultivated Crops",82,0.00,0.00,0.00
+"Woody Wetlands",90,"93,248.89",9.34,"93,248.89"
+"Emergent Herbaceous Wetlands",95,"3,586.50",0.36,"3,586.50"
+Total,,"998,839.04",100.00,"401,687.51"

@@ -22,7 +22,7 @@ test_kj <- expand.grid(
 
 j <- 1:ncol(Y)
 
-# NOTE: Time difference of 3.938068 hours
+# NOTE: Time difference of 3.936068 hours
 {
   start.time <- Sys.time()
   fastEmu_fit_host_plant <- fastEmuFit(
@@ -110,12 +110,14 @@ plot_fastEmu_volcano_host <- fastEmu_host_results_for_plot |>
 plot_fastEmu_volcano_host
 
 
-
+##########
 # Examining the effect of month
+ 
 metadata_grt <- data.frame(sample_data(ps_grt))
 Y <- as.matrix(if(taxa_are_rows(ps_grt)) t(otu_table(ps_grt)) else otu_table(ps_grt))
-# Filter out ASV columns with zero reads  
-Y <- Y[,-which(colSums(Y) == 0)]
+
+# Remove samples with zero ASV counts
+
 
 X <- model.matrix(~ month, data = metadata_grt)
 k_index <- grep("month", colnames(X))
@@ -127,7 +129,7 @@ test_kj <- expand.grid(
 
 j <- 1:ncol(Y)
 
-# Fitting the fastEmu model should take about 2-3 hours on my laptop
+# Fitting the fastEmu model should take about 4-5 hours on my laptop
 {
   start.time <- Sys.time()
   fastEmu_fit_month <- fastEmuFit(
@@ -234,10 +236,10 @@ ggsave(
 save(
   ps_july, metadata_july, fastEmu_host_results, 
   fastEmu_host_results_for_plot, plot_fastEmu_volcano_host,
-  ps_grt, metadata_grt, fastEmu_month_results,
+  # ps_grt, metadata_grt, fastEmu_month_results,
   # # the `fastEmuFit` objects themselves are too large for storage on GitHub
   # fastEmu_fit_host_plant, fastEmu_fit_month,  
-  fastEmu_month_results_for_plot, plot_fastEmu_volcano_month,
-  fastEmu_figure,
+  # fastEmu_month_results_for_plot, plot_fastEmu_volcano_month,
+  # fastEmu_figure,
   file = "Jhae.microbiome.fastEmu.RData"
 )

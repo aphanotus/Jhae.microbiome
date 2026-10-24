@@ -7,7 +7,7 @@
   library(glmpca)
 }
 
-load("Jhae.microbiome.RData", verbose = TRUE)
+# load("Jhae.microbiome.RData", verbose = TRUE)
 
 # For host_plant (in July)
 
@@ -49,8 +49,7 @@ plot_glmpca_host <- ggplot(pca_coords_july, aes(x = dim1, y = dim2, color = host
   scale_fill_manual(values = color.by.plant) +  
   theme(
     legend.position = "bottom"
-  ) +
-  coord_fixed()
+  ) 
 
 plot_glmpca_host
 
@@ -95,8 +94,7 @@ plot_glmpca_month <- ggplot(pca_coords_grt, aes(x = dim1, y = dim2, color = mont
   scale_fill_manual(values = color.by.month) +  
   theme(
     legend.position = "bottom"
-  ) +
-  coord_fixed()
+  ) 
 
 plot_glmpca_month
 

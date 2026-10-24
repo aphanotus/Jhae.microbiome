@@ -9,11 +9,10 @@
 
 load("Jhae.microbiome.RData", verbose = TRUE)
 
-# Strip out any remaining unclassified Phyla or Families before testing
+# Strip out any unclassified Phyla or Families before testing
 ps_phylum <- subset_taxa(ps_phylum, !is.na(Phylum))
 ps_family <- subset_taxa(ps_family, !is.na(Family))
 
-#####
 # ANCOM-BC2 for Phylum level
 ancom_phylum <- ancombc2(
   data = ps_phylum,
@@ -106,7 +105,7 @@ plot_ancom_phylum_by_month <- phylum_results %>%
   ) +
   geom_vline(xintercept = 0, color = "gray30") +
   theme(panel.grid.minor = element_blank(), panel.grid.major.y = element_blank()) +
-  scale_x_continuous(limits = c(-6,5), breaks = c(-6:5)) +
+  scale_x_continuous(limits = c(-6,6.5), breaks = c(-6:6.5)) +
   # scale_fill_manual(values = c("#4575b4","#FF8559")) +
   scale_fill_manual(values = color.by.month[2]) +
   labs(
@@ -130,7 +129,7 @@ plot_ancom_family_by_host_plant <- family_results %>%
   ) +
   geom_vline(xintercept = 0, color = "gray30") +
   theme(panel.grid.minor = element_blank(), panel.grid.major.y = element_blank()) +
-  scale_x_continuous(limits = c(-6,5), breaks = c(-6:5)) +
+  scale_x_continuous(limits = c(-6,6.5), breaks = c(-6:6.5)) +
   scale_fill_manual(values = color.by.plant) +
   labs(
     title = "Family-level host shifts",
@@ -153,7 +152,7 @@ plot_ancom_family_by_month <- family_results %>%
   ) +
   geom_vline(xintercept = 0, color = "gray30") +
   theme(panel.grid.minor = element_blank(), panel.grid.major.y = element_blank()) +
-  scale_x_continuous(limits = c(-6,5), breaks = c(-6:5)) +
+  scale_x_continuous(limits = c(-6,6.5), breaks = c(-6:6.5)) +
   scale_fill_manual(values = color.by.month) +
   labs(
     title = "Family-level seasonal shifts",
@@ -173,7 +172,7 @@ plot_ancom_asv_by_host_plant <- asv_results %>%
       "Allorhizobium-Neorhizobium-Pararhizobium-Rhizobium", 
       "Rhizobium complex"
     ),
-    Plot_Name = paste0(Granular_Taxon, "\n(", substr(taxon, 1, 6), "...)")
+    Plot_Name = paste0(Granular_Taxon, "\n(", substr(taxon, 1, 8), ")")
   ) %>% 
   mutate(Plot_Name = factor(Plot_Name, levels = unique(Plot_Name))) %>%
   mutate(Shift = ifelse(lfc_host_plantGRT > 0, "Enriched in GRT", "Enriched in BV")) %>% 
@@ -185,7 +184,7 @@ plot_ancom_asv_by_host_plant <- asv_results %>%
   ) +
   geom_vline(xintercept = 0, color = "gray30") +
   theme(panel.grid.minor = element_blank(), panel.grid.major.y = element_blank()) +
-  scale_x_continuous(limits = c(-6,5), breaks = c(-6:5)) +
+  scale_x_continuous(limits = c(-6,6.5), breaks = c(-6:6.5)) +
   scale_fill_manual(values = color.by.plant) +
   labs(
     title = "ASV-level host shifts",
@@ -205,7 +204,7 @@ plot_ancom_asv_by_month <- asv_results %>%
       "Allorhizobium-Neorhizobium-Pararhizobium-Rhizobium", 
       "Rhizobium complex"
     ),
-    Plot_Name = paste0(Granular_Taxon, "\n(", substr(taxon, 1, 6), "...)")
+    Plot_Name = paste0(Granular_Taxon, "\n(", substr(taxon, 1, 8), ")")
   ) %>% 
   mutate(Plot_Name = factor(Plot_Name, levels = unique(Plot_Name))) %>%
   mutate(Shift = ifelse(lfc_monthJuly > 0, "Enriched in July", "Enriched in January")) %>% 
@@ -217,7 +216,7 @@ plot_ancom_asv_by_month <- asv_results %>%
   ) +
   geom_vline(xintercept = 0, color = "gray30") +
   theme(panel.grid.minor = element_blank(), panel.grid.major.y = element_blank()) +
-  scale_x_continuous(limits = c(-6,5), breaks = c(-6:5)) +
+  scale_x_continuous(limits = c(-6,6.5), breaks = c(-6:6.5)) +
   scale_fill_manual(values = color.by.month) +
   labs(
     title = "ASV-level seasonal shifts",
@@ -238,9 +237,9 @@ plot_layout(heights = c(1, 9, 3), widths = c(1, 1), guides = "collect")
 ancom_figure
 
 ggsave(
-  filename = "plots/ANCOM.png", 
+  filename = "plots/FigX.ANCOM.png", 
   plot = ancom_figure,
-  width = 9, height = 5.6, scale = 1, 
+  width = 6.5, height = 6, scale = 1.25, 
   dpi = 600, bg = "white"
 )
 

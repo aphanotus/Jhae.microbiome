@@ -162,10 +162,13 @@ setwd("~/Documents/3.research/Jhae.microbiome")
   # Combine the data
   ps <- phyloseq(ASV_obj, META_obj, TAX_obj)
   
+  # Clean up
+  rm(ASV_obj, META_obj, TAX_obj)
+  
   # Subset only adult Jadera haematoloma
   ps <- subset_samples(ps, ((stage == "adult") & (species == "Jhae")))
   
-  # Exclude any samples with unspecified sex
+  # Include only samples with known sex
   ps <- subset_samples(ps, sex %in% c("female","male"))
 
   # Record total read count
@@ -190,20 +193,26 @@ setwd("~/Documents/3.research/Jhae.microbiome")
   # Remove ASVs with zero counts across all samples.
   ps <- prune_taxa(taxa_sums(ps) > 0, ps)
   
+  # Remove samples with zero counts across all ASVs
+  ps <- prune_samples(sample_sums(ps) > 0, ps)
+  
   # Alpha diversity metrics
   richness_df <- estimate_richness(ps, measures = c("Observed","Shannon","Simpson"))
   
-  # Add the Observed OTU number 
-  sample_data(ps)$observed_OTUs <- richness_df$Observed
+  # Add the Observed ASV number 
+  sample_data(ps)$observed_ASVs <- richness_df$Observed
   sample_data(ps)$shannon <- richness_df$Shannon
   sample_data(ps)$simpson <- richness_df$Simpson
   
-  # Extract the metadata into a standard data frame
-  metadata <- as(sample_data(ps), "data.frame")
-  
-  # # Rarefaction
+  # Extract the metadata into a data frame
+  ps_main <- ps
+  metadata_main <- as(sample_data(ps_main), "data.frame")
+}
+
+# Rarefaction
+{ 
   # {
-  #   # Extract the OTU table
+  #   # Extract the ASV table
   #   # (Ensure taxa are columns and samples are rows)
   #   otu_table_ps <- as(otu_table(ps), "matrix")
   #   if (taxa_are_rows(ps)) {
@@ -216,7 +225,7 @@ setwd("~/Documents/3.research/Jhae.microbiome")
   #     step = 50,
   #     xlim = c(0, 2000), ylim = c(0,100),
   #     main = "Rarefaction Curves (Wolbachia Removed)",
-  #     xlab = "Sequencing Depth", ylab = "Number of OTUs"
+  #     xlab = "Sequencing Depth", ylab = "Number of ASVs"
   #   )
   #   abline(v=c(100,500,1000, 2000), lty = 2, col = "darkred")
   # }
@@ -232,38 +241,37 @@ setwd("~/Documents/3.research/Jhae.microbiome")
   
   # | read min | taxa |       | samples |       |
   # | -------- | ---- | ----- | ------- | ----- |
-  # | NA       | 2148 |    NA | 177     |    NA |
-  # | 100      | 2133 | 99.3% | 163     | 92.1% |
-  # | 500      | 2101 | 97.8% | 153     | 86.4% |
-  # | 1000     | 2064 | 96.0% | 144     | 81.4% |
-  # | 2000     | 2055 | 95.7% | 138     | 78.0% |
+  # | NA       | 2148 |    NA | 175     |    NA |
+  # | 100      | 2133 | 99.3% | 163     | 93.1% |
+  # | 500      | 2101 | 97.8% | 153     | 87.4% |
+  # | 1000     | 2064 | 96.0% | 144     | 82.3% |
+  # | 2000     | 2055 | 95.7% | 138     | 78.9% |
   
   # Prune out samples with fewer than 1000 total reads
-  ps_main <- prune_samples(sample_sums(ps) >= 1000, ps)
+  ps_rare <- prune_samples(sample_sums(ps) >= 1000, ps)
 
   # Clean up any ASVs that now have zero counts because their samples were dropped
-  ps_main <- prune_taxa(taxa_sums(ps_main) > 0, ps_main)
+  ps_rare <- prune_taxa(taxa_sums(ps_rare) > 0, ps_rare)
 
   # Extract the metadata into a standard data frame
-  metadata_main <- as(sample_data(ps_main), "data.frame")
+  metadata_rare <- as(sample_data(ps_rare), "data.frame")
 }
 
 # Read depth check by seasonality
 {
-  boxplot(log10(read.count) ~ month, data = metadata_main)
+  boxplot(log10(read.count+1) ~ month, data = metadata_main)
   wilcox.test(read.count ~ month, data = metadata_main)
-  # NS
+  # W = 2865, p-value = 0.002457
   
-  boxplot(log10(Wolbachia.reads) ~ month, data = metadata_main)
+  boxplot(log10(Wolbachia.reads+1) ~ month, data = metadata_main)
   wilcox.test(Wolbachia.reads ~ month, data = metadata_main)
-  # W = 3348.5, p-value = 0.0001481
+  # W = 5291, p-value = 3.865e-05
   
-  boxplot(log10(read.count + Wolbachia.reads) ~ month, data = metadata_main)
+  boxplot(log10(read.count + Wolbachia.reads+1) ~ month, data = metadata_main)
   wilcox.test((read.count + Wolbachia.reads) ~ month, data = metadata_main)
-  # W = 2360, p-value = 0.7743
+  # W = 3157, p-value = 0.03004
   # Interpretation: Wolbachia is significantly more abundant in January samples
-  # (two-tailed Wilcoxon rank sum test, W = 3348.5, p-value = 0.0001481),
-  # although these is not different in total read counts.
+  # although there is only a marginal difference in total read counts.
 }
 
 
@@ -282,6 +290,11 @@ setwd("~/Documents/3.research/Jhae.microbiome")
   ps_grt <- subset_samples(ps_main, host_plant == "GRT")
   ps_grt <- prune_taxa(taxa_sums(ps_grt) > 0, ps_grt)
   metadata_grt <- as(sample_data(ps_grt), "data.frame")
+
+  ps_rare_grt <- subset_samples(ps_rare, host_plant == "GRT")
+  ps_rare_grt <- prune_taxa(taxa_sums(ps_rare_grt) > 0, ps_rare_grt)
+  metadata_rare_grt <- as(sample_data(ps_rare_grt), "data.frame")
+  
   ps_bv <- subset_samples(ps_main, host_plant == "BV")
   ps_bv <- prune_taxa(taxa_sums(ps_bv) > 0, ps_bv)
   metadata_bv <- as(sample_data(ps_bv), "data.frame")
@@ -289,6 +302,10 @@ setwd("~/Documents/3.research/Jhae.microbiome")
   ps_july <- subset_samples(ps_main, month == "July")
   ps_july <- prune_taxa(taxa_sums(ps_july) > 0, ps_july)
   metadata_july <- as(sample_data(ps_july), "data.frame")
+
+  ps_rare_july <- subset_samples(ps_rare, month == "July")
+  ps_rare_july <- prune_taxa(taxa_sums(ps_rare_july) > 0, ps_rare_july)
+  metadata_rare_july <- as(sample_data(ps_rare_july), "data.frame")
   
   # Isolate the July Goldenrain Tree samples
   ps_grt_july <- subset_samples(ps_main, host_plant == "GRT" & month == "July")
@@ -310,6 +327,9 @@ setwd("~/Documents/3.research/Jhae.microbiome")
   color.by.month = c("#4575b4","#FF8559")
   color.by.plant = c("#9acd32","#DAA520")
   color.by.urban = c("gray40","forestgreen")
+  
+  uuid.abbrev <- 8
+  
 }
 
 
@@ -317,15 +337,15 @@ setwd("~/Documents/3.research/Jhae.microbiome")
 # Composition Bar Plot
 
 {
-  ps_rel <- transform_sample_counts(ps_family, function(x) x / sum(x))
+  ps_rel <- transform_sample_counts(ps_family, function(x) x / sum(x, na.rm = TRUE))
   
   # Melt the phyloseq object into a tidy data frame for ggplot
   df_rel <- psmelt(ps_rel)
   
-  # Find the top 10 most abundant Families overall
+  # Find the top 9 most abundant Families overall
   top_families <- df_rel |>
     group_by(Family) |>
-    summarize(Mean_Abund = mean(Abundance)) |>
+    summarize(Mean_Abund = mean(Abundance, na.rm = TRUE)) |>
     arrange(desc(Mean_Abund)) |>
     slice(1:9) |>
     pull(Family)
@@ -362,7 +382,7 @@ setwd("~/Documents/3.research/Jhae.microbiome")
   # Group by host_plant, then calculate the average relative abundance
   plot_composition_grouped_by_host_plant <- df_plot |>
     group_by(host_plant, Family_Clean) |>
-    summarize(Mean_Abundance = mean(Abundance), .groups = 'drop') |> 
+    summarize(Mean_Abundance = mean(Abundance, na.rm = TRUE), .groups = 'drop') |> 
     ggplot(aes(x = host_plant, y = Mean_Abundance, fill = Family_Clean)) +
     geom_col(width = 0.7, color = "white", linewidth = 0.1) + 
     scale_y_continuous(labels = scales::percent, expand = c(0,0)) + 
@@ -371,17 +391,14 @@ setwd("~/Documents/3.research/Jhae.microbiome")
       x = NULL, y = NULL,
       fill = "Bacterial Family"
     ) +
-    theme_minimal() +
-    theme(
-      strip.background = element_rect(fill = "gray95", color = "gray80")
-    )
+    theme_minimal() 
   
   # plot_composition_grouped_by_host_plant
   
   # Group by month, then calculate the average relative abundance
   plot_composition_grouped_by_month <- df_plot |>
     group_by(month, Family_Clean) |>
-    summarize(Mean_Abundance = mean(Abundance), .groups = 'drop') |> 
+    summarize(Mean_Abundance = mean(Abundance, na.rm = TRUE), .groups = 'drop') |> 
     ggplot(aes(x = month, y = Mean_Abundance, fill = Family_Clean)) +
     geom_col(width = 0.7, color = "white", linewidth = 0.1) + 
     scale_y_continuous(labels = scales::percent, expand = c(0,0)) + 
@@ -390,10 +407,7 @@ setwd("~/Documents/3.research/Jhae.microbiome")
       x = NULL, y = NULL,
       fill = "Bacterial Family"
     ) +
-    theme_minimal() +
-    theme(
-      strip.background = element_rect(fill = "gray95", color = "gray80")
-    )
+    theme_minimal() 
   
   # plot_composition_grouped_by_month
   
@@ -417,7 +431,7 @@ setwd("~/Documents/3.research/Jhae.microbiome")
 # Defining core microbiota
 {
   # Calculate Mean Relative Abundance
-  ps_bv_rel <- transform_sample_counts(ps_bv, function(x) x / sum(x))
+  ps_bv_rel <- transform_sample_counts(ps_bv, function(x) x / sum(x, na.rm = TRUE))
   mean_abundance <- taxa_sums(ps_bv_rel) / nsamples(ps_bv_rel)
   
   # Calculate Prevalence
@@ -440,7 +454,7 @@ setwd("~/Documents/3.research/Jhae.microbiome")
   head(bv_summary_sorted, 10)
   
   # Mean Abundance and Prevalence
-  ps_grt_july_rel <- transform_sample_counts(ps_grt_july, function(x) x / sum(x))
+  ps_grt_july_rel <- transform_sample_counts(ps_grt_july, function(x) x / sum(x, na.rm = TRUE))
   mean_abund_grt_july <- taxa_sums(ps_grt_july_rel) / nsamples(ps_grt_july_rel)
   
   ps_grt_july_pa <- transform_sample_counts(ps_grt_july, function(x) ifelse(x > 0, 1, 0))
@@ -457,26 +471,25 @@ setwd("~/Documents/3.research/Jhae.microbiome")
   
   head(grt_july_summary_sorted, 10)
 }
+
 ##########
 # Host shift 
 {
-  bv_summary_sorted$host <- "Cardiospermum"
-  grt_july_summary_sorted$host <- "Koelreuteria"
+  bv_summary_sorted$host <- "C. corindum"
+  grt_july_summary_sorted$host <- "K. paniculata"
   
   combined_july_summary <- bind_rows(bv_summary_sorted, grt_july_summary_sorted)
   
   # Extract the Top 10 from BV and July GRT
   target_asvs_july <- unique(c(
     head(bv_summary_sorted$ASV_ID, 5), 
-    head(grt_july_summary_sorted$ASV_ID, 2)
+    head(grt_july_summary_sorted$ASV_ID, 5)
   ))
-  
-  uuid.abbrev <- 8
   
   slope_df_july <- combined_july_summary |>
     filter(ASV_ID %in% target_asvs_july) |>
     mutate(
-      Host = factor(host, levels = c("Cardiospermum", "Koelreuteria")),
+      Host = factor(host, levels = c("C. corindum", "K. paniculata")),
       Taxa_Label = case_when(
         !is.na(Genus) & Genus != "NA" ~ paste0(Genus, "\n(", substr(ASV_ID, 1, uuid.abbrev), ")"),
         !is.na(Family) & Family != "NA" ~ paste0(Family, "\n(", substr(ASV_ID, 1, uuid.abbrev), ")"),
@@ -492,12 +505,12 @@ setwd("~/Documents/3.research/Jhae.microbiome")
     geom_line(linewidth = 1.5, alpha = 0.8) +
     geom_point(size = 4) +
     geom_text_repel(
-      data = slope_df_july |> filter(Host == "Cardiospermum"),
+      data = slope_df_july |> filter(Host == "C. corindum"),
       aes(label = Taxa_Label),
       nudge_x = -0.15, hjust = 1, direction = "y", fontface = "italic", size = 4
     ) +
     geom_text_repel(
-      data = slope_df_july |> filter(Host == "Koelreuteria"),
+      data = slope_df_july |> filter(Host == "K. paniculata"),
       aes(label = Taxa_Label),
       nudge_x = 0.15, hjust = 0, direction = "y", fontface = "italic", size = 4
     ) +
@@ -505,7 +518,9 @@ setwd("~/Documents/3.research/Jhae.microbiome")
       name = "Mean Relative Abundance",
       labels = scales::percent_format(), limits = c(0, NA)
     ) +
-    scale_color_brewer(palette = "Dark2") + 
+    scale_color_viridis(option = "D", end = 0.7, discrete = TRUE, direction = -1) +
+    # scale_color_viridis(option = "E", end = 0.7, discrete = TRUE, direction = -1) +
+    # scale_color_brewer(palette = "Dark2") + 
     scale_x_discrete(name = NULL, expand = expansion(mult = c(1, 1))) +
     # scale_x_discrete(name = NULL) + 
     theme_classic() +
@@ -516,13 +531,6 @@ setwd("~/Documents/3.research/Jhae.microbiome")
   
   plot_host_shift
   
-  ggsave(
-    filename = "plots/FigX.core_microbiome_shift.png", 
-    plot = plot_host_shift,
-    width = 4, height = 3, scale = 1.5, 
-    dpi = 600, bg = "white"
-  )
-  
 }
 
 
@@ -530,13 +538,13 @@ setwd("~/Documents/3.research/Jhae.microbiome")
 # Prevalence vs. abundance for each host plant
 {
   # Transform to relative abundance for the plot
-  ps_july_rel <- transform_sample_counts(ps_july, function(x) x / sum(x))
+  ps_july_rel <- transform_sample_counts(ps_july, function(x) x / sum(x, na.rm = TRUE))
   
   # Extract sample names for each host plant
   bv_samples <- sample_names(subset_samples(ps_july_rel, host_plant == "BV"))
   grt_samples <- sample_names(subset_samples(ps_july_rel, host_plant == "GRT"))
   
-  # Extract the OTU matrix
+  # Extract the ASV matrix
   otu_matrix <- as(otu_table(ps_july_rel), "matrix")
   
   # Function to calculate prevalence and mean abundance
@@ -613,28 +621,34 @@ setwd("~/Documents/3.research/Jhae.microbiome")
       y = "Prevalence (% of Samples)"
     ) +
     coord_flip()
+  
+  pa_by_host_plot
+  
+  figure_host_shift <- (pa_by_host_plot + plot_host_shift) +
+    plot_annotation(tag_levels = 'A') 
+  
+  figure_host_shift
+  
+  ggsave(
+    filename = "plots/FigX.host.shift.png", 
+    plot = figure_host_shift,
+    width = 6.5, height = 3.5, scale = 2.25, 
+    dpi = 600, bg = "white"
+  )
+
 }
-
-pa_by_host_plot
-
-ggsave(
-  filename = "plots/FigX.prevalence_vs_abundance_by_host.png", 
-  plot = pa_by_host_plot,
-  width = 6.5, height = 3.5, scale = 1.5, 
-  dpi = 600, bg = "white"
-)
 
 
 ################################################################################
 # Alpha diversity
 
 {
-  alpha.columns <- c("observed_OTUs", "simpson") # "shannon", 
-  alpha.labels <- c("Observed OTUs", "Simpson Index") # "Shannon Index", 
+  alpha.columns <- c("observed_ASVs", "simpson") # "shannon", 
+  alpha.labels <- c("Observed ASVs", "Simpson Index") # "Shannon Index", 
   names(alpha.labels) <- alpha.columns
   
   # Alpha diversity by sex
-  plot_alpha_sex <- metadata_main |> 
+  plot_alpha_sex <- metadata_rare |> 
     pivot_longer(cols = all_of(alpha.columns)) |> 
     mutate(name = alpha.labels[match(name, alpha.columns)]) |> 
     ggplot(aes(x=sex, y=value, fill = sex)) +
@@ -649,7 +663,7 @@ ggsave(
   plot_alpha_sex
   
   # Alpha diversity by morph
-  plot_alpha_morph <- metadata_main |> 
+  plot_alpha_morph <- metadata_rare |> 
     filter(morph %in% c("LW","SW")) |> 
     pivot_longer(cols = all_of(alpha.columns)) |> 
     mutate(name = alpha.labels[match(name, alpha.columns)]) |> 
@@ -665,7 +679,8 @@ ggsave(
   plot_alpha_morph
   
   # Alpha diversity by host plant   
-  plot_alpha_host <- metadata_july |> 
+  plot_alpha_host <- metadata_rare |> 
+    filter(month == "July") |> 
     pivot_longer(cols = all_of(alpha.columns)) |> 
     mutate(name = alpha.labels[match(name, alpha.columns)]) |> 
     ggplot(aes(x=host_plant, y=value, fill = host_plant)) +
@@ -680,7 +695,8 @@ ggsave(
   plot_alpha_host
   
   # Alpha diversity by month
-  plot_alpha_month <- metadata_grt |> 
+  plot_alpha_month <- metadata_rare |> 
+    filter(host_plant == "GRT") |> 
     pivot_longer(cols = all_of(alpha.columns)) |> 
     mutate(name = alpha.labels[match(name, alpha.columns)]) |> 
     ggplot(aes(x=month, y=value, fill = month)) +
@@ -695,7 +711,20 @@ ggsave(
   plot_alpha_month
   
   # Alpha diversity by urbanicity
-  plot_alpha_urban <- metadata_main |> 
+  plot_alpha_urban_Obs <- metadata_rare |> 
+    ggplot(aes(x = urbanicity, y = observed_ASVs)) +
+    theme_classic() +
+    theme(legend.position = "none") +
+    geom_point(aes(color = urbanicity), alpha = 0.8, size = 2) +
+    scale_color_gradient(
+      low = color.by.urban[1], high = color.by.urban[2]
+    ) +
+    geom_smooth(method = "lm", color = "grey35", se = TRUE) +
+    labs(x = "Urbanicity PC1", y = "Observed ASVs", title = "Urbanicity") 
+  
+  plot_alpha_urban_Obs
+  
+  plot_alpha_urban_SI <- metadata_rare |> 
     ggplot(aes(x = urbanicity, y = simpson)) +
     theme_classic() +
     theme(legend.position = "none") +
@@ -706,11 +735,11 @@ ggsave(
     geom_smooth(method = "lm", color = "grey35", se = TRUE) +
     labs(x = "Urbanicity PC1", y = "Simpson's index", title = "Urbanicity") 
   
-  plot_alpha_urban
+  plot_alpha_urban_SI
   
   # Alpha diversity by green space
-  plot_alpha_green <- metadata_main |> 
-    ggplot(aes(x = green_space, y = observed_OTUs)) +
+  plot_alpha_green_Obs <- metadata_rare |> 
+    ggplot(aes(x = green_space, y = observed_ASVs)) +
     theme_classic() +
     theme(legend.position = "none") +
     geom_point(aes(color = green_space), alpha = 0.8, size = 2) +
@@ -719,9 +748,23 @@ ggsave(
     ) +
     geom_smooth(method = "lm", color = "grey35", se = TRUE) +
     xlim(c(0,0.8)) +
-    labs(x = "Local green space (m² / km²)", y = "Observed OTUs", title = "Green space") 
+    labs(x = "Local green space (m² / km²)", y = "Observed ASVs", title = "Green space") 
   
-  plot_alpha_green
+  plot_alpha_green_Obs
+
+    plot_alpha_green_SI <- metadata_rare |> 
+    ggplot(aes(x = green_space, y = simpson)) +
+    theme_classic() +
+    theme(legend.position = "none") +
+    geom_point(aes(color = green_space), alpha = 0.8, size = 2) +
+    scale_color_gradient(
+      low = color.by.urban[1], high = color.by.urban[2]
+    ) +
+    geom_smooth(method = "lm", color = "grey35", se = TRUE) +
+    xlim(c(0,0.8)) +
+    labs(x = "Local green space (m² / km²)", y = "Simpson's index", title = "Green space") 
+  
+  plot_alpha_green_SI
 }
 
 ##########
@@ -730,43 +773,45 @@ ggsave(
   # Using Wilcoxon rank sum test
   
   # sex 
-  wilcox.test(observed_OTUs ~ sex, data = metadata_main)
+  wilcox.test(observed_ASVs ~ sex, data = metadata_rare)
   # W = 1921, p-value = 0.007405
-  wilcox.test(simpson ~ sex, data = metadata_main)
+  wilcox.test(simpson ~ sex, data = metadata_rare)
   # NS
   
   # morph 
-  x <- metadata_main |> filter(morph %in% c("LW","SW"))
-  wilcox.test(observed_OTUs ~ morph, data = x)
+  x <- metadata_rare |> filter(morph %in% c("LW","SW"))
+  wilcox.test(observed_ASVs ~ morph, data = x)
   # NS
   wilcox.test(simpson ~ morph, data = x)
   # NS
   
   # host plant
-  wilcox.test(observed_OTUs ~ host_plant, data = metadata_july)
+  x <- metadata_rare |> filter(month == "July")
+  wilcox.test(observed_ASVs ~ host_plant, data = x)
   # NS
-  wilcox.test(simpson ~ host_plant, data = metadata_july)
+  wilcox.test(simpson ~ host_plant, data = x)
   # W = 359, p-value = 0.01012
   
   # month (January vs July) ***
-  wilcox.test(observed_OTUs ~ month, data = metadata_grt)
+  x <- metadata_rare |> filter(host_plant == "GRT")
+  wilcox.test(observed_ASVs ~ month, data = x)
   # W = 1442, p-value = 0.0002286
-  wilcox.test(simpson ~ month, data = metadata_grt)
+  wilcox.test(simpson ~ month, data = x)
   # W = 1316, p-value = 2.353e-05
   
   # LMM for urbanicity
-  urban_model <- lmer(observed_OTUs ~ urbanicity + (1 | site_name), data = metadata_main)
+  urban_model <- lmer(observed_ASVs ~ urbanicity + (1 | site_name), data = metadata_rare)
   summary(urban_model)
   # NS
-  urban_model <- lmer(simpson ~ urbanicity + (1 | site_name), data = metadata_main)
+  urban_model <- lmer(simpson ~ urbanicity + (1 | site_name), data = metadata_rare)
   summary(urban_model)
   # NS
   
   # LMM for green space
-  green_space_model <- lmer(observed_OTUs ~ green_space + (1 | site_name), data = metadata_main)
+  green_space_model <- lmer(observed_ASVs ~ green_space + (1 | site_name), data = metadata_rare)
   summary(green_space_model)
   # NS
-  green_space_model <- lmer(simpson ~ green_space + (1 | site_name), data = metadata_main)
+  green_space_model <- lmer(simpson ~ green_space + (1 | site_name), data = metadata_rare)
   summary(green_space_model)
   # NS  
 }
@@ -777,7 +822,9 @@ ggsave(
 
 {
   alpha_figure_NS <- (
-    plot_alpha_morph | plot_alpha_urban | plot_alpha_green
+    plot_alpha_morph /
+    (plot_alpha_urban_Obs | plot_alpha_urban_SI) /
+    (plot_alpha_green_Obs | plot_alpha_green_SI)
   ) +
     plot_annotation(tag_levels = 'A') +
     plot_layout(guides = "collect")
@@ -786,7 +833,7 @@ ggsave(
   ggsave(
     filename = "plots/FigX.alpha.diversity.NS.png", 
     plot = alpha_figure_NS,
-    width = (2.25)*3, height = 2.5, scale = 1.8, 
+    width = (2.25)*2, height = (2.0)*3, scale = 1.8, 
     dpi = 600, bg = "white"
   )
   
@@ -812,32 +859,32 @@ ggsave(
 # Distance matrices and ordinations
 {
   # Bray-Curtis distance
-  dist_main_bray <- distance(ps_main, method = "bray")
-  dist_july_bray <- distance(ps_july, method = "bray")
-  dist_grt_bray <- distance(ps_july, method = "bray")
+  dist_rare_bray <- distance(ps_rare, method = "bray")
+  dist_july_bray <- distance(ps_rare_july, method = "bray")
+  dist_grt_bray <- distance(ps_rare_grt, method = "bray")
   
-  ord_july_bray <- ordinate(ps_july, method = "PCoA", distance = dist_july_bray)
-  ord_grt_bray <- ordinate(ps_july, method = "PCoA", distance = dist_grt_bray)
+  ord_july_bray <- ordinate(ps_rare_july, method = "PCoA", distance = dist_july_bray)
+  ord_grt_bray <- ordinate(ps_rare_grt, method = "PCoA", distance = dist_grt_bray)
   
   # UniFrac distances
   asv.tree <- phytools::read.newick("qiime/16s.Jhae.rooted-tree.tre")
-  ps_main_tree <- merge_phyloseq(ps_main, asv.tree)
-  ps_july_tree <- merge_phyloseq(ps_july, asv.tree)
-  ps_grt_tree <- merge_phyloseq(ps_grt, asv.tree)
+  ps_rare_tree <- merge_phyloseq(ps_rare, asv.tree)
+  ps_july_tree <- merge_phyloseq(ps_rare_july, asv.tree)
+  ps_grt_tree <- merge_phyloseq(ps_rare_grt, asv.tree)
   
-  dist_main_uwUF <- distance(ps_main_tree, method = "unifrac")
+  dist_rare_uwUF <- distance(ps_rare_tree, method = "unifrac")
   dist_july_uwUF <- distance(ps_july_tree, method = "unifrac")
   dist_grt_uwUF <- distance(ps_grt_tree, method = "unifrac")
   
-  dist_main_wUF <- distance(ps_main_tree, method = "wunifrac")
+  dist_rare_wUF <- distance(ps_rare_tree, method = "wunifrac")
   dist_july_wUF <- distance(ps_july_tree, method = "wunifrac")
   dist_grt_wUF <- distance(ps_grt_tree, method = "wunifrac")
   
-  ord_main_uwUF <- ordinate(ps_main_tree, method = "PCoA", distance = dist_main_uwUF)
+  ord_rare_uwUF <- ordinate(ps_rare_tree, method = "PCoA", distance = dist_rare_uwUF)
   ord_july_uwUF <- ordinate(ps_july_tree, method = "PCoA", distance = dist_july_uwUF)
   ord_grt_uwUF <- ordinate(ps_grt_tree, method = "PCoA", distance = dist_grt_uwUF)
   
-  ord_main_wUF <- ordinate(ps_main_tree, method = "PCoA", distance = dist_main_wUF)
+  ord_rare_wUF <- ordinate(ps_rare_tree, method = "PCoA", distance = dist_rare_wUF)
   ord_july_wUF <- ordinate(ps_july_tree, method = "PCoA", distance = dist_july_wUF)
   ord_grt_wUF <- ordinate(ps_grt_tree, method = "PCoA", distance = dist_grt_wUF)
 }
@@ -846,7 +893,7 @@ ggsave(
 {
   pcoa.bray.host <- plot_ordination(ps_july, ord_july_bray, color = "host_plant") +
     theme_classic() +
-    theme(legend.position = "bottom") +
+    theme(legend.position = "none") +
     geom_point(size = 3, alpha = 0.8) +
     scale_color_manual(name = "Host plant", values = color.by.plant) +
     coord_fixed()
@@ -854,7 +901,7 @@ ggsave(
   
   pcoa.uwUF.host <- plot_ordination(ps_july_tree, ord_july_uwUF, color = "host_plant") +
     theme_classic() +
-    theme(legend.position = "bottom") +
+    theme(legend.position = "none") +
     geom_point(size = 3, alpha = 0.8) +
     scale_color_manual(values = color.by.plant) +
     coord_fixed()
@@ -862,11 +909,26 @@ ggsave(
   
   pcoa.wUF.host <- plot_ordination(ps_july_tree, ord_july_wUF, color = "host_plant") +
     theme_classic() +
-    theme(legend.position = "bottom") +
+    theme(legend.position = "right") +
     geom_point(size = 3, alpha = 0.8) +
     scale_color_manual(values = color.by.plant) +
     coord_fixed()
   pcoa.wUF.host
+
+  figure_PCoA_host <- (
+    (pcoa.bray.host | pcoa.uwUF.host) / pcoa.wUF.host
+  ) +
+    plot_annotation(tag_levels = 'A') 
+
+  figure_PCoA_host
+  
+  ggsave(
+    filename = "plots/FigX.PCoA.by.host.png", 
+    plot = figure_PCoA_host,
+    width = (2.5)*2, height = (2.5)*2, scale = 1.25, 
+    dpi = 600, bg = "white"
+  )
+  
 }
 
 
@@ -874,26 +936,26 @@ ggsave(
 # PERMANVOA Assumptions
 
 # Testing dispersion of each factor
-dispersion_test <- betadisper(dist_main_bray, metadata_main$sex)
+dispersion_test <- betadisper(dist_rare_bray, metadata_rare$sex)
 permutest(dispersion_test) # NS
-dispersion_test <- betadisper(dist_main_bray, metadata_main$morph)
-permutest(dispersion_test) # 0.008 **
-dispersion_test <- betadisper(dist_main_bray, metadata_main$host_plant)
+dispersion_test <- betadisper(dist_rare_bray, metadata_rare$morph)
+permutest(dispersion_test) # 0.013 *
+dispersion_test <- betadisper(dist_july_bray, metadata_rare_july$host_plant)
 permutest(dispersion_test) # NS
-dispersion_test <- betadisper(dist_main_bray, metadata_main$month)
-permutest(dispersion_test) # NS
+dispersion_test <- betadisper(dist_grt_bray, metadata_rare_grt$month)
+permutest(dispersion_test) # 0.052 .
 
-dispersion_test <- betadisper(dist_main_uwUF, metadata_main$sex)
+dispersion_test <- betadisper(dist_rare_uwUF, metadata_rare$sex)
 permutest(dispersion_test) # NS
-dispersion_test <- betadisper(dist_main_uwUF, metadata_main$morph)
+dispersion_test <- betadisper(dist_rare_uwUF, metadata_rare$morph)
 permutest(dispersion_test) # 0.001 ***
-dispersion_test <- betadisper(dist_main_uwUF, metadata_main$host_plant)
+dispersion_test <- betadisper(dist_july_uwUF, metadata_rare_july$host_plant)
 permutest(dispersion_test) # 0.001 ***
-dispersion_test <- betadisper(dist_main_uwUF, metadata_main$month)
+dispersion_test <- betadisper(dist_grt_uwUF, metadata_rare_grt$month)
 permutest(dispersion_test) # NS
 
 # Look in more detail ar dispersion by host_plant
-dispersion_by_host_plant <- betadisper(dist_main_uwUF, metadata_main$host_plant)
+dispersion_by_host_plant <- betadisper(dist_july_uwUF, metadata_rare_july$host_plant)
 dispersion_by_host_plant <- data.frame(
   Group = dispersion_by_host_plant$group,
   Distance = dispersion_by_host_plant$distances
@@ -910,17 +972,17 @@ plot.dispersion_by_host_plant <- ggplot(dispersion_by_host_plant, aes(x = Group,
 
 plot.dispersion_by_host_plant
 
-dispersion_test <- betadisper(dist_main_wUF, metadata_main$morph)
+dispersion_test <- betadisper(dist_rare_wUF, metadata_rare$sex)
+permutest(dispersion_test) # 0.02 *
+dispersion_test <- betadisper(dist_rare_wUF, metadata_rare$morph)
 permutest(dispersion_test) # NS
-dispersion_test <- betadisper(dist_main_wUF, metadata_main$morph)
+dispersion_test <- betadisper(dist_july_wUF, metadata_rare_july$host_plant)
+permutest(dispersion_test) # 0.023 *
+dispersion_test <- betadisper(dist_grt_wUF, metadata_rare_grt$month)
 permutest(dispersion_test) # NS
-dispersion_test <- betadisper(dist_main_wUF, metadata_main$host_plant)
-permutest(dispersion_test) # 0.001 ***
-dispersion_test <- betadisper(dist_main_wUF, metadata_main$month)
-permutest(dispersion_test) # 0.041 *
 
 # Look in more detail ar dispersion by host_plant
-dispersion_by_host_plant <- betadisper(dist_main_wUF, metadata_main$host_plant)
+dispersion_by_host_plant <- betadisper(dist_july_wUF, metadata_rare_july$host_plant)
 dispersion_by_host_plant <- data.frame(
   Group = dispersion_by_host_plant$group,
   Distance = dispersion_by_host_plant$distances
@@ -945,53 +1007,53 @@ iterations <- 1e3
 
 # Full Model
 perm_bray_full <- adonis2(
-  dist_main_bray ~ sex + morph + host_plant + month + urbanicity, 
-  data = metadata_main, 
+  dist_rare_bray ~ sex + morph + host_plant + month + urbanicity, 
+  data = metadata_rare, 
   by = "margin",  
   permutations = iterations
 )
 
 perm_bray_full
 #             Df SumOfSqs      R2      F   Pr(>F)    
-# sex          1    0.362 0.00821 1.2484 0.220779    
+# sex          1    0.362 0.00821 1.2484 0.218781    
 # morph        2    0.599 0.01358 1.0324 0.373626    
 # host_plant   1    1.965 0.04457 6.7744 0.000999 ***
 # month        1    0.953 0.02161 3.2851 0.008991 ** 
-# urbanicity   1    0.562 0.01276 1.9393 0.063936 .  
+# urbanicity   1    0.562 0.01276 1.9393 0.080919 .  
 # Residual   137   39.729 0.90125                    
-# Total      143   44.083 1.00000     
+# Total      143   44.083 1.00000   
 
 perm_uwUF_full <- adonis2(
-  dist_main_uwUF ~ sex + morph + host_plant + month + urbanicity, 
-  data = metadata_main, 
+  dist_rare_uwUF ~ sex + morph + host_plant + month + urbanicity, 
+  data = metadata_rare, 
   by = "margin",  
   permutations = iterations
 )
 
 perm_uwUF_full
 #             Df SumOfSqs      R2      F   Pr(>F)    
-# sex          1    0.550 0.00863 1.2888 0.041958 *  
-# morph        2    0.917 0.01439 1.0747 0.224775    
+# sex          1    0.550 0.00863 1.2888 0.052947 .  
+# morph        2    0.917 0.01439 1.0747 0.228771    
 # host_plant   1    1.809 0.02838 4.2381 0.000999 ***
 # month        1    0.929 0.01458 2.1772 0.000999 ***
 # urbanicity   1    0.821 0.01289 1.9246 0.000999 ***
 # Residual   137   58.463 0.91752                    
-# Total      143   63.719 1.00000       
+# Total      143   63.719 1.00000 
 
 perm_wUF_full <- adonis2(
-  dist_main_wUF ~ sex + morph + host_plant + month + urbanicity, 
-  data = metadata_main, 
+  dist_rare_wUF ~ sex + morph + host_plant + month + urbanicity, 
+  data = metadata_rare, 
   by = "margin",  
   permutations = iterations
 )
 
 perm_wUF_full
 #             Df SumOfSqs      R2      F   Pr(>F)    
-# sex          1 0.0001189 0.00410  0.9731 0.450549    
-# morph        2 0.0000802 0.00276  0.3280 0.607393    
+# sex          1 0.0001189 0.00410  0.9731 0.453546    
+# morph        2 0.0000802 0.00276  0.3280 0.621379    
 # host_plant   1 0.0094116 0.32446 77.0139 0.000999 ***
-# month        1 0.0001492 0.00515  1.2213 0.384615    
-# urbanicity   1 0.0000962 0.00332  0.7872 0.446553    
+# month        1 0.0001492 0.00515  1.2213 0.389610    
+# urbanicity   1 0.0000962 0.00332  0.7872 0.481518    
 # Residual   137 0.0167423 0.57718                     
 # Total      143 0.0290072 1.00000    
 
@@ -1015,8 +1077,8 @@ x <- metadata_main |>
     Latitude = round(unique(latitude)[1],4),
     Longitude = round(unique(longitude)[1],4),
     Host_plant = unique(host_plant),
-    Sample_size_in_January = sum(month == "January"),
-    Sample_size_in_July = sum(month == "July"),
+    Sample_size_in_January = sum(month == "January", na.rm = TRUE),
+    Sample_size_in_July = sum(month == "July", na.rm = TRUE),
     Proportion_of_green_space = round(unique(green_space),4),
     Urbanicity_index = round(unique(urbanicity),3)
   ) |> 
@@ -1027,10 +1089,10 @@ write_delim(x, "collection.sites.tsv", delim = "\t")
 
 ################################################################################
 # Follow-up scripts
+# - "field.site.map.R"
+# - "GLM-PCA.R"
 # - "ancom.R"
 # - "aldex.R"
-# - "GLM-PCA.R"
 # - "fastEmu.R"
 # - "MaAsLin3.R"
-# - "field.site.map.R"
 

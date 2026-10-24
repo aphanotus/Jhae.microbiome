@@ -67,7 +67,7 @@ aldex_host_plot_df <- aldex_host |>
 plot_aldex_host <- ggplot(aldex_host_plot_df, aes(x = effect, y = -log10(wi.ep), color = Significance)) +
   geom_point(alpha = 0.85, size = 2.5) +
   geom_text_repel(
-    aes(label = Taxa_Label), size = 3.5, 
+    aes(label = Taxa_Label), size = 2.5, 
     box.padding = 0.5, point.padding = 0.3, 
     force = 4, max.overlaps = Inf, 
     show.legend = FALSE
@@ -83,7 +83,7 @@ plot_aldex_host <- ggplot(aldex_host_plot_df, aes(x = effect, y = -log10(wi.ep),
     legend.position = "bottom",
     legend.title = element_blank()
   ) +
-  expand_limits(x = c(-6, 4.5), y = c(0, 3.5)) +
+  expand_limits(x = c(-6, 4), y = c(0, 9)) +
   labs(
     x = "Effect Size",
     y = expression(-log[10]("p-value"))
@@ -91,6 +91,7 @@ plot_aldex_host <- ggplot(aldex_host_plot_df, aes(x = effect, y = -log10(wi.ep),
 
 plot_aldex_host
 
+##########
 # By month
 counts_grt <- round(as(otu_table(ps_grt), "matrix"))
 conditions_grt <- as.character(sample_data(ps_grt)$month)
@@ -125,8 +126,8 @@ aldex_month_plot_df <- aldex_month |>
   mutate(
     # Categorize by significance AND strong effect size (> 1 or < -1)
     Significance = case_when(
-      wi.eBH < 0.05 & effect > 0.5 ~ "Enriched in July",
-      wi.eBH < 0.05 & effect < -0.5 ~ "Enriched in January",
+      wi.eBH < 0.05 & effect > 0 ~ "Enriched in July",
+      wi.eBH < 0.05 & effect < 0 ~ "Enriched in January",
       TRUE ~ "Not Significant"
     ),
     # Create a label for only the extreme drivers (effect > |1|) to prevent plot clutter
@@ -143,7 +144,7 @@ aldex_month_plot_df <- aldex_month |>
 plot_aldex_month <- ggplot(aldex_month_plot_df, aes(x = effect, y = -log10(wi.ep), color = Significance)) +
   geom_point(alpha = 0.85, size = 2.5) +
   geom_text_repel(
-    aes(label = Taxa_Label), size = 3.5, 
+    aes(label = Taxa_Label), size = 2.5, 
     box.padding = 0.5, point.padding = 0.3, 
     force = 4, max.overlaps = Inf, 
     show.legend = FALSE
@@ -159,7 +160,7 @@ plot_aldex_month <- ggplot(aldex_month_plot_df, aes(x = effect, y = -log10(wi.ep
     legend.position = "bottom",
     legend.title = element_blank()
   ) +
-  expand_limits(x = c(-6, 4.5), y = c(0, 3.5)) +
+  expand_limits(x = c(-6, 4), y = c(0, 9)) +
   labs(
     x = "Effect Size",
     y = expression(-log[10]("p-value"))
@@ -177,7 +178,7 @@ aldex_figure
 ggsave(
   filename = "plots/FigX.aldex.volcanos.png", 
   plot = aldex_figure,
-  width = 6.5, height = 3.5, scale = 1.5, 
+  width = 6.5, height = 3.5, scale = 1.65, 
   dpi = 600, bg = "white"
 )
 

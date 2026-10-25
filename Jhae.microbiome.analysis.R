@@ -26,7 +26,7 @@ setwd("~/Documents/3.research/Jhae.microbiome")
 }
 
 ################################################################################
-# Load the data and process metrics
+# Load the data and perform inital processing
 {
   # Load feature table
   {
@@ -173,9 +173,12 @@ setwd("~/Documents/3.research/Jhae.microbiome")
 {
   # Subset only adult Jadera haematoloma
   ps <- subset_samples(ps, ((stage == "adult") & (species == "Jhae")))
+  ps 
+  # 180 samples 
   
   # Include only samples with known sex
   ps <- subset_samples(ps, sex %in% c("female","male"))
+  # 177 samples 
 
   # Record initial total read count
   sample_data(ps)$initial.reads <- sample_sums(ps)
@@ -247,17 +250,20 @@ setwd("~/Documents/3.research/Jhae.microbiome")
 
 # Read depth check by seasonality
 {
-  boxplot(log10(initial.reads+1) ~ month, data = metadata_main)
+  # All reads
+  boxplot(log10(initial.reads) ~ month, data = metadata_main)
   wilcox.test(initial.reads ~ month, data = metadata_main)
   # W = 2219, p-value = 0.385
   
-  boxplot(log10(Wolbachia.reads+1) ~ month, data = metadata_main)
+  # Wolbachia only
+  boxplot(log10(Wolbachia.reads) ~ month, data = metadata_main)
   wilcox.test(Wolbachia.reads ~ month, data = metadata_main)
   # W = 3348.5, p-value = 0.0001481
   
-  boxplot(log10(initial.reads + Wolbachia.reads+1) ~ month, data = metadata_main)
-  wilcox.test((initial.reads + Wolbachia.reads) ~ month, data = metadata_main)
-  # W = 2360, p-value = 0.7743
+  # Reads without Wolbachia
+  boxplot(log10(initial.reads - Wolbachia.reads) ~ month, data = metadata_main)
+  wilcox.test((initial.reads - Wolbachia.reads) ~ month, data = metadata_main)
+  # W = 1960, p-value = 0.05269
   # Interpretation: Wolbachia is significantly more abundant in January samples
   # although there is no difference in total initial read depth.
 }
@@ -917,35 +923,100 @@ setwd("~/Documents/3.research/Jhae.microbiome")
     update_theme(axis.ticks = element_blank())
   }  
   
-  pcoa.bray.host <- plot_ordination(ps_rare, ord_rare_bray, color = "host_plant") +
-    geom_point(size = 3, alpha = 0.8) +
-    scale_color_manual(name = "Host plant", values = color.by.plant) +
-    coord_fixed()
-  pcoa.bray.host
+  {
+    # Host plant / global
+    pcoa.global.bray.host_plant <- plot_ordination(ps_rare, ord_rare_bray, color = "host_plant") +
+      geom_point(size = 3, alpha = 0.8) +
+      scale_color_manual(name = NULL, values = color.by.plant) +
+      coord_fixed()
+    pcoa.global.bray.host_plant
+    
+    pcoa.global.uwUF.host_plant <- plot_ordination(ps_rare_tree, ord_rare_uwUF, color = "host_plant") +
+      geom_point(size = 3, alpha = 0.8) +
+      scale_color_manual(name = NULL, values = color.by.plant) +
+      coord_fixed()
+    pcoa.global.uwUF.host_plant
+    
+    pcoa.global.wUF.host_plant <- plot_ordination(ps_rare_tree, ord_rare_wUF, color = "host_plant") +
+      geom_point(size = 3, alpha = 0.8) +
+      scale_color_manual(name = NULL, values = color.by.plant) +
+      coord_fixed()
+    pcoa.global.wUF.host_plant
+    
+    
+    # Month / global
+    pcoa.global.bray.month <- plot_ordination(ps_rare, ord_rare_bray, color = "month") +
+      geom_point(size = 3, alpha = 0.8) +
+      scale_color_manual(name = NULL, values = color.by.month) +
+      coord_fixed()
+    pcoa.global.bray.month
+    
+    pcoa.global.uwUF.month <- plot_ordination(ps_rare_tree, ord_rare_uwUF, color = "month") +
+      geom_point(size = 3, alpha = 0.8) +
+      scale_color_manual(name = NULL, values = color.by.month) +
+      coord_fixed()
+    pcoa.global.uwUF.month
+    
+    pcoa.global.wUF.month <- plot_ordination(ps_rare_tree, ord_rare_wUF, color = "month") +
+      geom_point(size = 3, alpha = 0.8) +
+      scale_color_manual(name = NULL, values = color.by.month) +
+      coord_fixed()
+    pcoa.global.wUF.month
+    
+    
+    # Host plant / July
+    pcoa.july.bray.host_plant <- plot_ordination(ps_july, ord_july_bray, color = "host_plant") +
+      geom_point(size = 3, alpha = 0.8) +
+      scale_color_manual(name = NULL, values = color.by.plant) +
+      coord_fixed()
+    pcoa.july.bray.host_plant
+    
+    pcoa.july.uwUF.host_plant <- plot_ordination(ps_july_tree, ord_july_uwUF, color = "host_plant") +
+      geom_point(size = 3, alpha = 0.8) +
+      scale_color_manual(name = NULL, values = color.by.plant) +
+      coord_fixed()
+    pcoa.july.uwUF.host_plant
+    
+    pcoa.july.wUF.host_plant <- plot_ordination(ps_july_tree, ord_july_wUF, color = "host_plant") +
+      geom_point(size = 3, alpha = 0.8) +
+      scale_color_manual(name = NULL, values = color.by.plant) +
+      coord_fixed()
+    pcoa.july.wUF.host_plant
+    
+    
+    # Month / GRT
+    pcoa.grt.bray.month <- plot_ordination(ps_grt, ord_grt_bray, color = "month") +
+      geom_point(size = 3, alpha = 0.8) +
+      scale_color_manual(name = NULL, values = color.by.month) +
+      coord_fixed()
+    pcoa.grt.bray.month
+    
+    pcoa.grt.uwUF.month <- plot_ordination(ps_grt_tree, ord_grt_uwUF, color = "month") +
+      geom_point(size = 3, alpha = 0.8) +
+      scale_color_manual(name = NULL, values = color.by.month) +
+      coord_fixed()
+    pcoa.grt.uwUF.month
+    
+    pcoa.grt.wUF.month <- plot_ordination(ps_grt_tree, ord_grt_wUF, color = "month") +
+      geom_point(size = 3, alpha = 0.8) +
+      scale_color_manual(name = NULL, values = color.by.month) +
+      coord_fixed()
+    pcoa.grt.wUF.month
+    
+  }
   
-  pcoa.uwUF.host <- plot_ordination(ps_july_tree, ord_july_uwUF, color = "host_plant") +
-    geom_point(size = 3, alpha = 0.8) +
-    scale_color_manual(values = color.by.plant) +
-    coord_fixed()
-  pcoa.uwUF.host
-  
-  pcoa.wUF.host <- plot_ordination(ps_july_tree, ord_july_wUF, color = "host_plant") +
-    geom_point(size = 3, alpha = 0.8) +
-    scale_color_manual(values = color.by.plant) +
-    coord_fixed()
-  pcoa.wUF.host
-
-  figure_PCoA_host <- (
-    pcoa.bray.host | pcoa.uwUF.host | pcoa.wUF.host
+  figure_PCoA <- (
+    (pcoa.global.bray.host_plant | pcoa.global.uwUF.host_plant | pcoa.global.wUF.host_plant) /
+      (pcoa.global.bray.month | pcoa.global.uwUF.month | pcoa.global.wUF.month) /
+      (pcoa.july.bray.host_plant | pcoa.july.uwUF.host_plant | pcoa.july.wUF.host_plant) /
+      (pcoa.grt.bray.month | pcoa.grt.uwUF.month | pcoa.grt.wUF.month)
   ) +
     plot_annotation(tag_levels = 'A') 
-
-  figure_PCoA_host
   
   ggsave(
-    filename = "plots/FigX.PCoA.by.host.png", 
-    plot = figure_PCoA_host,
-    width = (2.5)*2, height = (2.5)*2, scale = 1.25, 
+    filename = "plots/FigX.PCoA.png", 
+    plot = figure_PCoA,
+    width = (2.5)*3, height = (2.5)*4, scale = 1.25, 
     dpi = 600, bg = "white"
   )
   
@@ -1134,6 +1205,7 @@ iterations <- 1e3
 # Save the image
 save.image("Jhae.microbiome.RData")
 
+# load("Jhae.microbiome.RData", verbose = TRUE)
 
 ################################################################################
 # Table generation
@@ -1166,5 +1238,4 @@ write_delim(x, "collection.sites.tsv", delim = "\t")
 # - "ancom.R"
 # - "aldex.R"
 # - "fastEmu.R"
-# - "MaAsLin3.R"
 

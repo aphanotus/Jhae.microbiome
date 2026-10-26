@@ -456,6 +456,26 @@ setwd("~/Documents/3.research/Jhae.microbiome")
     dpi = 300, bg = "white"
   )
   
+  # An equivalent table
+  ps_main_family <- tax_glom(ps_main, taxrank = "Family")
+  ps_rel_family <- transform_sample_counts(ps_main_family, function(x) x / sum(x))
+  family_mean_abundances <- taxa_sums(ps_rel_family) / nsamples(ps_rel_family)
+  
+  tax_table_df <- as(tax_table(ps_main_family), "matrix") |> 
+    as.data.frame() |> 
+    rownames_to_column(var = "ASV_ID")
+  
+  top_families_table <- data.frame(
+    ASV_ID = names(family_mean_abundances),
+    Mean_Relative_Abundance_Pct = family_mean_abundances * 100
+  ) |>
+    left_join(tax_table_df, by = "ASV_ID") |>
+    arrange(desc(Mean_Relative_Abundance_Pct)) |>
+    mutate(Mean_Relative_Abundance_Pct = round(Mean_Relative_Abundance_Pct, 2)) |>
+    dplyr::select(Phylum, Class, Order, Family, Mean_Relative_Abundance_Pct)
+  
+  head(top_families_table, 10)
+  
 }
 
 

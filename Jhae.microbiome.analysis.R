@@ -502,14 +502,23 @@ setwd("~/Documents/3.research/Jhae.microbiome")
   grt_summary_sorted <- grt_summary[order(-grt_summary$Mean_Abundance, -grt_summary$Prevalence), ]
   
   head(grt_summary_sorted, 10)
+
+  # Define the core ASVs
+  bv_summary_sorted$host <- "C. corindum"
+  grt_summary_sorted$host <- "K. paniculata"
+  
+  core.microbiota <- bind_rows(bv_summary_sorted, grt_summary_sorted) |> 
+    filter(Prevalence > 0.8, Mean_Abundance > 0.1) |> 
+    remove_rownames() |> 
+    relocate(host) 
+  
+  write.csv(core.microbiota, "tables/TableSX.core.microbiota.csv", row.names = FALSE)
+  
 }
 
 ##########
 # Host shift 
 {
-  bv_summary_sorted$host <- "C. corindum"
-  grt_summary_sorted$host <- "K. paniculata"
-  
   combined_summary <- bind_rows(bv_summary_sorted, grt_summary_sorted)
   
   # Extract the Top 10 from BV and GRT
@@ -1002,6 +1011,25 @@ setwd("~/Documents/3.research/Jhae.microbiome")
       scale_color_manual(name = NULL, values = color.by.month) +
       coord_fixed()
     pcoa.grt.wUF.month
+   
+    # green_space / global
+    pcoa.global.bray.green_space <- plot_ordination(ps_rare, ord_rare_bray, color = "green_space") +
+      geom_point(size = 3, alpha = 0.8) +
+      scale_color_gradient(low = color.by.urban[1], high = color.by.urban[2]) +
+      coord_fixed()
+    pcoa.global.bray.green_space
+    
+    pcoa.global.uwUF.green_space <- plot_ordination(ps_rare_tree, ord_rare_uwUF, color = "green_space") +
+      geom_point(size = 3, alpha = 0.8) +
+      scale_color_gradient(low = color.by.urban[1], high = color.by.urban[2]) +
+      coord_fixed()
+    pcoa.global.uwUF.green_space
+    
+    pcoa.global.wUF.green_space <- plot_ordination(ps_rare_tree, ord_rare_wUF, color = "green_space") +
+      geom_point(size = 3, alpha = 0.8) +
+      scale_color_gradient(low = color.by.urban[1], high = color.by.urban[2]) +
+      coord_fixed()
+    pcoa.global.wUF.green_space
     
   }
   
@@ -1071,10 +1099,10 @@ setwd("~/Documents/3.research/Jhae.microbiome")
 ##########
 # PERMANOVA Models 
 # Partial sums of squares (the equivalent of Type III ANOVA)
-iterations <- 1e3
 
 # Full Models
 {
+  iterations <- 1e3
   perm_bray_full <- adonis2(
     dist_rare_bray ~ sex + morph + host_plant + month + green_space, 
     data = metadata_rare, 

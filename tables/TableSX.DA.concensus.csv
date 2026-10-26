@@ -1,0 +1,15 @@
+contrast,Feature_ID,core microbiota,ANCOM-BC2 LFC,ANCOM-BC2 q,ALDEx2 effect,ALDEx2 wi.eBH,fastEmu estimate,fastEmu q,Phylum,Class,Order,Family,Genus,Species
+host_plant,02502141f0a1bf07cc6d6c60b94433f5,TRUE,-2.4088929,3.11E-10,NA,NA,NA,NA,Proteobacteria,Gammaproteobacteria,Enterobacterales,Enterobacteriaceae,NA,NA
+host_plant,221659bea0a1fb86d90ab90a24cd7dfe,FALSE,NA,NA,-2.5697972,0.0385694,-8.2477439,0.0355786,Proteobacteria,Alphaproteobacteria,Sphingomonadales,Sphingomonadaceae,NA,NA
+host_plant,3cc27a22b5adf4e21f48c1f09ee198de,FALSE,-4.1862052,0.0003373,-2.6740050,0.0385694,-6.9828671,0.0367383,Proteobacteria,Alphaproteobacteria,Caulobacterales,Caulobacteraceae,Caulobacter,NA
+host_plant,5f9403f34de2d6658df09b913aa13184,TRUE,NA,NA,-5.6413270,0.0385694,-13.7126080,0.0398384,Proteobacteria,Alphaproteobacteria,NA,NA,NA,NA
+host_plant,7364a9d6bfb4a993fabfa2e22252a18d,TRUE,-2.8617773,1.57E-12,NA,NA,NA,NA,Proteobacteria,Gammaproteobacteria,Enterobacterales,Enterobacteriaceae,NA,NA
+host_plant,78849fe4c1e26973c2a70cf0727da7e8,FALSE,-2.0871048,0.0002603,NA,NA,-4.5313437,0.0367383,Actinobacteriota,Actinobacteria,Micrococcales,Microbacteriaceae,Microbacterium,NA
+host_plant,90dc413777fc22c4efdda035d0b2edd0,FALSE,NA,NA,-2.6000002,0.0386005,-7.2388047,0.0355786,Proteobacteria,Alphaproteobacteria,Acetobacterales,Acetobacteraceae,Roseomonas,NA
+host_plant,feeb651ed135a05fff03c033989caded,FALSE,NA,NA,-2.7626169,0.0385694,-6.4820482,0.0398384,Actinobacteriota,Actinobacteria,Micrococcales,Microbacteriaceae,NA,NA
+month,08bb6389255945886b20e36acbab566f,FALSE,-1.6076198,0.0000193,NA,NA,-5.7506796,0.0017205,Firmicutes,Bacilli,Lactobacillales,Lactobacillaceae,Lactobacillus,NA
+month,4bca6d2c2632165857073fbaf8e36f2c,FALSE,-1.2951009,0.0000037,NA,NA,-3.3940454,0.0190719,Firmicutes,Bacilli,Staphylococcales,Staphylococcaceae,Staphylococcus,NA
+month,8084aa68823c09679d87c31776e22478,TRUE,NA,NA,0.5986764,0.0045438,-1.8107478,0.0109635,Firmicutes,Bacilli,Lactobacillales,Streptococcaceae,Lactococcus,NA
+month,9f8c37a25eca1c8caec4c05d14cd7cdf,TRUE,NA,NA,NA,NA,-1.3186579,0.0242594,Proteobacteria,Alphaproteobacteria,Rhizobiales,Rhizobiaceae,NA,NA
+month,aa5738a607473674763d7e712002a471,FALSE,-1.0315342,0.0000224,NA,NA,-2.8614012,0.0109635,Actinobacteriota,Actinobacteria,Corynebacteriales,Corynebacteriaceae,uncultured,NA
+month,fcb2943f9c7b866112a146c62e824bdb,FALSE,NA,NA,0.7401510,0.0008727,-2.1537783,0.0109635,Firmicutes,Bacilli,Lactobacillales,Lactobacillaceae,Pediococcus,NA

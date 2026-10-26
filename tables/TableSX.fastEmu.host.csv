@@ -1,0 +1,8 @@
+"ASV_ID","estimate","pval","p_adj","Phylum","Class","Order","Family","Genus","Species"
+"221659bea0a1fb86d90ab90a24cd7dfe",-8.2477438872391,4.68448171699494e-05,0.0355786386405766,"Proteobacteria","Alphaproteobacteria","Sphingomonadales","Sphingomonadaceae",NA,NA
+"90dc413777fc22c4efdda035d0b2edd0",-7.23880467530061,4.21947438949415e-05,0.0355786386405766,"Proteobacteria","Alphaproteobacteria","Acetobacterales","Acetobacteraceae","Roseomonas",NA
+"78849fe4c1e26973c2a70cf0727da7e8",-4.53134374941395,8.29131433871359e-05,0.0367382953532181,"Actinobacteriota","Actinobacteria","Micrococcales","Microbacteriaceae","Microbacterium",NA
+"3cc27a22b5adf4e21f48c1f09ee198de",-6.98286710661975,9.67433715687113e-05,0.0367382953532181,"Proteobacteria","Alphaproteobacteria","Caulobacterales","Caulobacteraceae","Caulobacter",NA
+"feeb651ed135a05fff03c033989caded",-6.48204821633797,0.000183587134647416,0.0398384082184892,"Actinobacteriota","Actinobacteria","Micrococcales","Microbacteriaceae",NA,NA
+"5f9403f34de2d6658df09b913aa13184",-13.7126081296004,0.000171087088072985,0.0398384082184892,"Proteobacteria","Alphaproteobacteria",NA,NA,NA,NA
+"8e58415bd25490f244500fc718b657b3",-13.3194602395373,0.000150219495423821,0.0398384082184892,NA,NA,NA,NA,NA,NA

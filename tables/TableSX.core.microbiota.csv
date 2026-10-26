@@ -1,0 +1,7 @@
+host,ASV_ID,Mean_Abundance,Prevalence,Phylum,Class,Order,Family,Genus,Species
+C. corindum,02502141f0a1bf07cc6d6c60b94433f5,0.278790338,1,Proteobacteria,Gammaproteobacteria,Enterobacterales,Enterobacteriaceae,NA,NA
+C. corindum,5f9403f34de2d6658df09b913aa13184,0.242246178,1,Proteobacteria,Alphaproteobacteria,NA,NA,NA,NA
+C. corindum,7364a9d6bfb4a993fabfa2e22252a18d,0.230191726,1,Proteobacteria,Gammaproteobacteria,Enterobacterales,Enterobacteriaceae,NA,NA
+C. corindum,8084aa68823c09679d87c31776e22478,0.150427581,1,Firmicutes,Bacilli,Lactobacillales,Streptococcaceae,Lactococcus,NA
+K. paniculata,9f8c37a25eca1c8caec4c05d14cd7cdf,0.661537547,0.992805755,Proteobacteria,Alphaproteobacteria,Rhizobiales,Rhizobiaceae,NA,NA
+K. paniculata,8084aa68823c09679d87c31776e22478,0.135416183,0.841726619,Firmicutes,Bacilli,Lactobacillales,Streptococcaceae,Lactococcus,NA

@@ -563,6 +563,7 @@ setwd("~/Documents/3.research/Jhae.microbiome")
   
   plot_host_shift <- df_for_plot_host_shift |> 
     ggplot(aes(x = host, y = Mean_Abundance, group = Taxa_Label, color = Taxa_Label)) +
+    geom_hline(yintercept = 0.1, linetype = "dotted", linewidth = 0.5, color = "grey35") +
     geom_line(linewidth = 1.5, alpha = 0.8) +
     geom_point(size = 4) +
     geom_text_repel(
@@ -583,14 +584,13 @@ setwd("~/Documents/3.research/Jhae.microbiome")
     # scale_color_viridis(option = "E", end = 0.7, discrete = TRUE, direction = -1) +
     # scale_color_brewer(palette = "Dark2") + 
     scale_x_discrete(name = NULL, expand = expansion(mult = c(1, 1))) +
-    # scale_x_discrete(name = NULL) + 
     theme_classic() +
     theme(
       legend.position = "none",
       axis.text.x = element_text(face = "italic", size = 12)
     )
   
-  print(plot_host_shift)
+  plot_host_shift
   
 }
 
@@ -674,6 +674,11 @@ setwd("~/Documents/3.research/Jhae.microbiome")
   # Build the plot
   pa_by_host_plot <- plot_df |> 
     ggplot(aes(x = Mean_Abundance, y = Prevalence)) +
+    annotate(
+      "rect", 
+      xmin = 0.1, xmax = Inf, ymin = 0.8, ymax = Inf,
+      fill = "lightgoldenrod1", alpha = 0.35
+    ) +
     geom_point(aes(color = highlight, alpha = highlight), size = 2.5) +
     scale_color_manual(values = c("Highlight" = "#d95f02", "Other" = "grey60")) +
     scale_alpha_manual(values = c("Highlight" = 1, "Other" = 0.5)) +
@@ -1025,38 +1030,53 @@ setwd("~/Documents/3.research/Jhae.microbiome")
   {
     # Host plant / global
     pcoa.global.bray.host_plant <- plot_ordination(ps_rare, ord_rare_bray, color = "host_plant") +
+      stat_ellipse(aes(fill = host_plant), geom = "polygon", alpha = 0.1, show.legend = FALSE) +
+      scale_fill_manual(name = NULL, values = color.by.plant) +
       geom_point(size = 3, alpha = 0.8) +
       scale_color_manual(name = NULL, values = color.by.plant) +
-      coord_fixed()
+      coord_fixed() +
+      labs(title="Bray-Curtis dissimilarity")
     pcoa.global.bray.host_plant
     
     pcoa.global.uwUF.host_plant <- plot_ordination(ps_rare_tree, ord_rare_uwUF, color = "host_plant") +
+      stat_ellipse(aes(fill = host_plant), geom = "polygon", alpha = 0.1, show.legend = FALSE) +
+      scale_fill_manual(name = NULL, values = color.by.plant) +
       geom_point(size = 3, alpha = 0.8) +
       scale_color_manual(name = NULL, values = color.by.plant) +
-      coord_fixed()
+      coord_fixed() +
+      labs(title="unweighted UniFrac")
     pcoa.global.uwUF.host_plant
     
     pcoa.global.wUF.host_plant <- plot_ordination(ps_rare_tree, ord_rare_wUF, color = "host_plant") +
+      stat_ellipse(aes(fill = host_plant), geom = "polygon", alpha = 0.1, show.legend = FALSE) +
+      scale_fill_manual(name = NULL, values = color.by.plant) +
       geom_point(size = 3, alpha = 0.8) +
       scale_color_manual(name = NULL, values = color.by.plant) +
-      coord_fixed()
+      coord_fixed() +
+      labs(title="weighted UniFrac")
     pcoa.global.wUF.host_plant
     
     
     # Month / global
     pcoa.global.bray.month <- plot_ordination(ps_rare, ord_rare_bray, color = "month") +
+      stat_ellipse(aes(fill = month), geom = "polygon", alpha = 0.1, show.legend = FALSE) +
+      scale_fill_manual(name = NULL, values = color.by.month) +
       geom_point(size = 3, alpha = 0.8) +
       scale_color_manual(name = NULL, values = color.by.month) +
       coord_fixed()
     pcoa.global.bray.month
     
     pcoa.global.uwUF.month <- plot_ordination(ps_rare_tree, ord_rare_uwUF, color = "month") +
+      stat_ellipse(aes(fill = month), geom = "polygon", alpha = 0.1, show.legend = FALSE) +
+      scale_fill_manual(name = NULL, values = color.by.month) +
       geom_point(size = 3, alpha = 0.8) +
       scale_color_manual(name = NULL, values = color.by.month) +
       coord_fixed()
     pcoa.global.uwUF.month
     
     pcoa.global.wUF.month <- plot_ordination(ps_rare_tree, ord_rare_wUF, color = "month") +
+      stat_ellipse(aes(fill = month), geom = "polygon", alpha = 0.1, show.legend = FALSE) +
+      scale_fill_manual(name = NULL, values = color.by.month) +
       geom_point(size = 3, alpha = 0.8) +
       scale_color_manual(name = NULL, values = color.by.month) +
       coord_fixed()
@@ -1065,18 +1085,24 @@ setwd("~/Documents/3.research/Jhae.microbiome")
     
     # Host plant / July
     pcoa.july.bray.host_plant <- plot_ordination(ps_july, ord_july_bray, color = "host_plant") +
+      stat_ellipse(aes(fill = host_plant), geom = "polygon", alpha = 0.1, show.legend = FALSE) +
+      scale_fill_manual(name = NULL, values = color.by.plant) +
       geom_point(size = 3, alpha = 0.8) +
       scale_color_manual(name = NULL, values = color.by.plant) +
       coord_fixed()
     pcoa.july.bray.host_plant
     
     pcoa.july.uwUF.host_plant <- plot_ordination(ps_july_tree, ord_july_uwUF, color = "host_plant") +
+      stat_ellipse(aes(fill = host_plant), geom = "polygon", alpha = 0.1, show.legend = FALSE) +
+      scale_fill_manual(name = NULL, values = color.by.plant) +
       geom_point(size = 3, alpha = 0.8) +
       scale_color_manual(name = NULL, values = color.by.plant) +
       coord_fixed()
     pcoa.july.uwUF.host_plant
     
     pcoa.july.wUF.host_plant <- plot_ordination(ps_july_tree, ord_july_wUF, color = "host_plant") +
+      stat_ellipse(aes(fill = host_plant), geom = "polygon", alpha = 0.1, show.legend = FALSE) +
+      scale_fill_manual(name = NULL, values = color.by.plant) +
       geom_point(size = 3, alpha = 0.8) +
       scale_color_manual(name = NULL, values = color.by.plant) +
       coord_fixed()
@@ -1085,18 +1111,24 @@ setwd("~/Documents/3.research/Jhae.microbiome")
     
     # Month / GRT
     pcoa.grt.bray.month <- plot_ordination(ps_grt, ord_grt_bray, color = "month") +
+      stat_ellipse(aes(fill = month), geom = "polygon", alpha = 0.1, show.legend = FALSE) +
+      scale_fill_manual(name = NULL, values = color.by.month) +
       geom_point(size = 3, alpha = 0.8) +
       scale_color_manual(name = NULL, values = color.by.month) +
       coord_fixed()
     pcoa.grt.bray.month
     
     pcoa.grt.uwUF.month <- plot_ordination(ps_grt_tree, ord_grt_uwUF, color = "month") +
+      stat_ellipse(aes(fill = month), geom = "polygon", alpha = 0.1, show.legend = FALSE) +
+      scale_fill_manual(name = NULL, values = color.by.month) +
       geom_point(size = 3, alpha = 0.8) +
       scale_color_manual(name = NULL, values = color.by.month) +
       coord_fixed()
     pcoa.grt.uwUF.month
     
     pcoa.grt.wUF.month <- plot_ordination(ps_grt_tree, ord_grt_wUF, color = "month") +
+      stat_ellipse(aes(fill = month), geom = "polygon", alpha = 0.1, show.legend = FALSE) +
+      scale_fill_manual(name = NULL, values = color.by.month) +
       geom_point(size = 3, alpha = 0.8) +
       scale_color_manual(name = NULL, values = color.by.month) +
       coord_fixed()
@@ -1132,7 +1164,7 @@ setwd("~/Documents/3.research/Jhae.microbiome")
     plot_annotation(tag_levels = 'A') 
   
   ggsave(
-    filename = "plots/FigX.PCoA.png", 
+    filename = "plots/FigS4.PCoA.png", 
     plot = figure_PCoA,
     width = (2.5)*3, height = (2.5)*4, scale = 1.25, 
     dpi = 600, bg = "white"

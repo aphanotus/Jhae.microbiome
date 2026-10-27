@@ -96,25 +96,25 @@ plot_dispersion_wUF_by_green_space
 dispersion_bray <- betadisper(dist_grt_bray, metadata_rare_grt$green_space_cat)
 permutest_bray <- permutest(dispersion_bray, permutations = 1e5-1)
 print(permutest_bray)
-#            Df  Sum Sq Mean Sq      F N.Perm  Pr(>F)   
+#            Df  Sum Sq Mean Sq      F N.Perm  Pr(>F)
 # Groups      2  1.4526 0.72629 7.3334  99999 0.00104 **
-# Residuals 136 13.4691 0.09904   
+# Residuals 136 13.4691 0.09904
 
 dispersion_uwUF <- betadisper(dist_grt_uwUF, metadata_rare_grt$green_space_cat)
 permutest_uwUF <- permutest(dispersion_uwUF, permutations = 1e5-1)
 print(permutest_uwUF)
 #            Df  Sum Sq Mean Sq      F N.Perm Pr(>F)
 # Groups      2 0.4246 0.212289 7.086  99999 0.00155 **
-# Residuals 136 4.0744 0.029959   
+# Residuals 136 4.0744 0.029959
 
 dispersion_wUF <- betadisper(dist_grt_wUF, metadata_rare_grt$green_space_cat)
 permutest_wUF <- permutest(dispersion_wUF, permutations = 1e5-1)
 print(permutest_wUF)
 #            Df  Sum Sq  Mean Sq      F N.Perm  Pr(>F)
 # Groups      2 0.10743 0.053715 6.3726  99999 0.00223 **
-# Residuals 136 1.14635 0.008429   
+# Residuals 136 1.14635 0.008429
 
-  
+
 
 beta_dispersion_figure <- (
   plot_dispersion_bray_by_green_space | plot_dispersion_uwUF_by_green_space | plot_dispersion_wUF_by_green_space
@@ -123,7 +123,7 @@ beta_dispersion_figure <- (
 beta_dispersion_figure
 
 ggsave(
-  filename = "plots/FigX.beta.dispersion.by.green.space.png",
+  filename = "plots/Fig6.beta.dispersion.by.green.space.png",
   plot = beta_dispersion_figure,
   width = 6.5, height = 2.5, scale = 1.75,
   dpi = 600, bg = "white"

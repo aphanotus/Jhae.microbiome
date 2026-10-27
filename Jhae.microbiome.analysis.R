@@ -450,7 +450,7 @@ setwd("~/Documents/3.research/Jhae.microbiome")
   print(composition_figure)
   
   ggsave(
-    filename = "plots/FigX.composition.barplots.png", 
+    filename = "plots/Fig1.composition.barplots.png", 
     plot = composition_figure,
     width = 9, height = 3, scale = 1.75, 
     dpi = 300, bg = "white"
@@ -567,13 +567,13 @@ setwd("~/Documents/3.research/Jhae.microbiome")
     geom_point(size = 4) +
     geom_text_repel(
       data = df_for_plot_host_shift |> filter(Host == "C. corindum"),
-      aes(label = Taxa_Label),
-      nudge_x = -0.15, hjust = 1, direction = "y", fontface = "italic", size = 4
+      aes(label = Taxa_Label), size = 2.5,
+      nudge_x = -0.15, hjust = 1, direction = "y", fontface = "italic"
     ) +
     geom_text_repel(
       data = df_for_plot_host_shift |> filter(Host == "K. paniculata"),
-      aes(label = Taxa_Label),
-      nudge_x = 0.15, hjust = 0, direction = "y", fontface = "italic", size = 4
+      aes(label = Taxa_Label), size = 2.5,
+      nudge_x = 0.15, hjust = 0, direction = "y", fontface = "italic"
     ) +
     scale_y_continuous(
       name = "Mean Relative Abundance",
@@ -594,6 +594,24 @@ setwd("~/Documents/3.research/Jhae.microbiome")
   
 }
 
+{
+  # Are the highly abundant Alphaproteobacteria and Rhizobiaceae 
+  # really endemic to BV and GRT?
+  
+  # First test this approach on an ASV, like the Enterobacteriaceae, 
+  # that appear in both
+  bind_rows(bv_summary_sorted, grt_summary_sorted) |> 
+    filter(ASV_ID == bv_summary_sorted$ASV_ID[1])
+  
+  # Yes, the Alphaproteobacteria is endemic to BV
+  bind_rows(bv_summary_sorted, grt_summary_sorted) |> 
+    filter(ASV_ID == bv_summary_sorted$ASV_ID[2])
+  
+  # Yes, the Rhizobiaceae is endemic to GRT
+  bind_rows(bv_summary_sorted, grt_summary_sorted) |> 
+    filter(ASV_ID == grt_summary_sorted$ASV_ID[1])
+  
+}
 
 ################################################################################
 # Prevalence vs. abundance for each host plant
@@ -666,7 +684,7 @@ setwd("~/Documents/3.research/Jhae.microbiome")
     geom_text_repel(
       data = top_asvs,
       aes(label = Taxa_Label),
-      size = 3.5,
+      size = 2.5,
       fontface = "italic",
       box.padding = 0.5, point.padding = 0.3, 
       force = 4, max.overlaps = Inf, 
@@ -691,9 +709,9 @@ setwd("~/Documents/3.research/Jhae.microbiome")
   figure_host_shift
   
   ggsave(
-    filename = "plots/FigX.host.shift.png", 
+    filename = "plots/Fig2.host.shift.png", 
     plot = figure_host_shift,
-    width = 6.5, height = 3.5, scale = 2.25, 
+    width = 6.5, height = 3, scale = 1.6, 
     dpi = 600, bg = "white"
   )
 
@@ -704,8 +722,19 @@ setwd("~/Documents/3.research/Jhae.microbiome")
 # Alpha diversity
 
 {
-  alpha.columns <- c("observed_ASVs", "simpson") # "shannon", 
-  alpha.labels <- c("Observed ASVs", "Simpson Index") # "Shannon Index", 
+  alpha_table <- metadata_rare |> 
+    rownames_to_column(var = "Sample_ID") |> 
+    dplyr::select(
+      Sample_ID, sex, morph, month, host_plant, city, green_space, 
+      latitude, longitude, 
+      observed_ASVs, shannon,simpson
+    ) 
+  
+  write.csv(alpha_table, "tables/TableS4.alpha.diversity.csv", row.names = FALSE)
+  
+  
+  alpha.columns <- c("observed_ASVs", "shannon", "simpson") 
+  alpha.labels <- c("Observed ASVs", "Shannon Index", "Simpson Index")
   names(alpha.labels) <- alpha.columns
 
   {
@@ -783,6 +812,18 @@ setwd("~/Documents/3.research/Jhae.microbiome")
   
   plot_alpha_urban_Obs
   
+  plot_alpha_urban_shannon <- metadata_rare |> 
+    ggplot(aes(x = urbanicity, y = shannon)) +
+    theme(panel.grid.major.x = NULL) + # Reset defaults
+    geom_point(aes(color = urbanicity), alpha = 0.8, size = 2) +
+    scale_color_gradient(
+      low = color.by.urban[1], high = color.by.urban[2]
+    ) +
+    geom_smooth(method = "lm", color = "grey35", se = TRUE) +
+    labs(x = "Urbanicity PC1", y = "Simpson's index", title = "Urbanicity") 
+  
+  plot_alpha_urban_shannon
+  
   plot_alpha_urban_SI <- metadata_rare |> 
     ggplot(aes(x = urbanicity, y = simpson)) +
     theme(panel.grid.major.x = NULL) + # Reset defaults
@@ -809,6 +850,19 @@ setwd("~/Documents/3.research/Jhae.microbiome")
   
   plot_alpha_green_Obs
 
+  plot_alpha_green_shannon <- metadata_rare |> 
+    ggplot(aes(x = green_space, y = shannon)) +
+    theme(panel.grid.major.x = NULL) + # Reset defaults
+    geom_point(aes(color = green_space), alpha = 0.8, size = 2) +
+    scale_color_gradient(
+      low = color.by.urban[1], high = color.by.urban[2]
+    ) +
+    geom_smooth(method = "lm", color = "grey35", se = TRUE) +
+    xlim(c(0,0.8)) +
+    labs(x = "Local green space (m² / km²)", y = "Shannon's index", title = "Green space") 
+  
+  plot_alpha_green_shannon  
+  
   plot_alpha_green_SI <- metadata_rare |> 
     ggplot(aes(x = green_space, y = simpson)) +
     theme(panel.grid.major.x = NULL) + # Reset defaults
@@ -831,43 +885,58 @@ setwd("~/Documents/3.research/Jhae.microbiome")
   # sex 
   wilcox.test(observed_ASVs ~ sex, data = metadata_rare)
   # W = 2149.5, p-value = 0.07717
+  wilcox.test(shannon ~ sex, data = metadata_rare)
+  # W = 2500.5, p-value = 0.7176
   wilcox.test(simpson ~ sex, data = metadata_rare)
-  # NS
+  # W = 2593.5, p-value = 0.9952
   
   # morph 
   x <- metadata_rare |> filter(morph %in% c("LW","SW"))
   wilcox.test(observed_ASVs ~ morph, data = x)
-  # NS
+  # W = 2074, p-value = 0.4926
+  wilcox.test(shannon ~ morph, data = x)
+  # W = 2112, p-value = 0.6029
   wilcox.test(simpson ~ morph, data = x)
-  # NS
+  # W = 2108, p-value = 0.5909
   
   # host plant
   wilcox.test(observed_ASVs ~ host_plant, data = metadata_rare_july)
-  # W = 316, p-value = 0.06921 (NS)
+  # W = 316, p-value = 0.06921
+  wilcox.test(shannon ~ host_plant, data = metadata_rare_july)
+  # W = 352, p-value = 0.01435
   wilcox.test(simpson ~ host_plant, data = metadata_rare_july)
   # W = 356, p-value = 0.01177
   
   # month (January vs July) ***
   wilcox.test(observed_ASVs ~ month, data = metadata_rare_grt)
   # W = 1491, p-value = 0.0005031
+  wilcox.test(shannon ~ month, data = metadata_rare_grt)
+  # W = 1306.5, p-value = 1.957e-05
   wilcox.test(simpson ~ month, data = metadata_rare_grt)
   # W = 1337.5, p-value = 3.538e-05
   
   # LMM for urbanicity
   urban_model <- lmer(observed_ASVs ~ urbanicity + (1 | site_name), data = metadata_rare)
   summary(urban_model)
-  # NS
+  # t value Pr(>|t|)    
+  # -0.846    0.423    
+  urban_model <- lmer(shannon ~ urbanicity + (1 | site_name), data = metadata_rare)
+  summary(urban_model)
+  # -1.544 0.182308   
   urban_model <- lmer(simpson ~ urbanicity + (1 | site_name), data = metadata_rare)
   summary(urban_model)
-  # NS
+  # -1.553 0.174039    
   
   # LMM for green space
   green_space_model <- lmer(observed_ASVs ~ green_space + (1 | site_name), data = metadata_rare)
   summary(green_space_model)
-  # NS
+  # 0.534  0.60365  
+  green_space_model <- lmer(shannon ~ green_space + (1 | site_name), data = metadata_rare)
+  summary(green_space_model)
+  # 0.534  0.60365     
   green_space_model <- lmer(simpson ~ green_space + (1 | site_name), data = metadata_rare)
   summary(green_space_model)
-  # NS  
+  # -1.369 0.198404      
 }
 
 ##########
@@ -875,31 +944,32 @@ setwd("~/Documents/3.research/Jhae.microbiome")
 
 {
   alpha_figure_NS <- (
+    plot_alpha_sex /
     plot_alpha_morph /
-    (plot_alpha_urban_Obs | plot_alpha_urban_SI) /
-    (plot_alpha_green_Obs | plot_alpha_green_SI)
+    (plot_alpha_urban_Obs | plot_alpha_urban_shannon | plot_alpha_urban_SI) /
+    (plot_alpha_green_Obs | plot_alpha_green_shannon | plot_alpha_green_SI)
   ) +
     plot_annotation(tag_levels = 'A') +
     plot_layout(guides = "collect")
   alpha_figure_NS
   
   ggsave(
-    filename = "plots/FigX.alpha.diversity.NS.png", 
+    filename = "plots/FigS3.alpha.diversity.NS.png", 
     plot = alpha_figure_NS,
-    width = (2.25)*2, height = (2.0)*3, scale = 1.8, 
+    width = 6.5, height = (2.0)*4, scale = 1.5, 
     dpi = 600, bg = "white"
   )
   
   alpha_figure <- (
-    plot_alpha_sex | plot_alpha_host | plot_alpha_month 
+    plot_alpha_host | plot_alpha_month 
   ) +
     plot_annotation(tag_levels = 'A')
   alpha_figure
   
   ggsave(
-    filename = "plots/FigX.alpha.diversity.png", 
+    filename = "plots/Fig3.alpha.diversity.png", 
     plot = alpha_figure,
-    width = (2.5)*3, height = 2.5, scale = 1.8, 
+    width = (2.5)*2, height = 2, scale = 2, 
     dpi = 600, bg = "white"
   )
   
@@ -1286,4 +1356,5 @@ write_delim(x, "collection.sites.tsv", delim = "\t")
 # - "ancom.R"
 # - "aldex.R"
 # - "fastEmu.R"
+# - "permdisp.R
 

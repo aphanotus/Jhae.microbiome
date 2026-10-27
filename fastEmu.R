@@ -143,10 +143,10 @@ x <- fastEmu_month_results |>
   filter(p_adj < 0.05) |>
   dplyr::select(ASV_ID, estimate, pval, p_adj, Phylum, Class, Order, Family, Genus, Species)
 x
-  
+
 write.csv(x, "tables/TableSX.fastEmu.month.csv", row.names = FALSE)
-  
-  
+
+
 # Prepare results for a volcano plot
 fastEmu_month_results_for_plot <- fastEmu_month_results |>
   mutate(
@@ -163,7 +163,7 @@ fastEmu_month_results_for_plot <- fastEmu_month_results |>
     )
   )
 
-plot_fastEmu_volcano_month <- fastEmu_month_results_for_plot |> 
+plot_fastEmu_volcano_month <- fastEmu_month_results_for_plot |>
   ggplot(aes(x = estimate, y = log10_pval, color = Significance)) +
   geom_point(alpha = 0.8, size = 2) +
   scale_color_manual(
@@ -252,7 +252,7 @@ fastEmu_green_space_results_for_plot <- fastEmu_green_space_results |>
     )
   )
 
-plot_fastEmu_volcano_green_space <- fastEmu_green_space_results_for_plot |> 
+plot_fastEmu_volcano_green_space <- fastEmu_green_space_results_for_plot |>
   ggplot(aes(x = estimate, y = log10_pval, color = Significance)) +
   geom_point(alpha = 0.8, size = 2) +
   scale_color_manual(
@@ -297,11 +297,11 @@ ggsave(
 
 # Manually curated list of robust DA ASvs (those DA by 2 or more methods)
 DA.ASVs.by.host <- c(
-  "221659bea0a1fb86d90ab90a24cd7dfe", "3cc27a22b5adf4e21f48c1f09ee198de", "5f9403f34de2d6658df09b913aa13184", 
-  "78849fe4c1e26973c2a70cf0727da7e8", "90dc413777fc22c4efdda035d0b2edd0", "feeb651ed135a05fff03c033989caded" 
+  "221659bea0a1fb86d90ab90a24cd7dfe", "3cc27a22b5adf4e21f48c1f09ee198de", "5f9403f34de2d6658df09b913aa13184",
+  "78849fe4c1e26973c2a70cf0727da7e8", "90dc413777fc22c4efdda035d0b2edd0", "feeb651ed135a05fff03c033989caded"
 )
 DA.ASVs.by.month <- c(
-  "08bb6389255945886b20e36acbab566f", "4bca6d2c2632165857073fbaf8e36f2c", "8084aa68823c09679d87c31776e22478", 
+  "08bb6389255945886b20e36acbab566f", "4bca6d2c2632165857073fbaf8e36f2c", "8084aa68823c09679d87c31776e22478",
   "aa5738a607473674763d7e712002a471", "fcb2943f9c7b866112a146c62e824bdb"
 )
 
@@ -393,7 +393,7 @@ DA_figure <- (
 DA_figure
 
 ggsave(
-  filename = "plots/FigX.consensus.DA.png",
+  filename = "plots/Fig5.consensus.DA.png",
   plot = DA_figure,
   width = 6.5, height = 3.0, scale = 1.65,
   dpi = 600, bg = "white"

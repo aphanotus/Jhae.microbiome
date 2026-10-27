@@ -1,2 +1,6 @@
 # Jhae microbiome project
-This is a work in progress.
+![](plots/Fig2.host.shift.png)
+
+Manuscript coming soon...
+
+[***Bugs in our Backyard***](https://bugsinourbackyard.org/)

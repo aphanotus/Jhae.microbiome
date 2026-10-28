@@ -9,6 +9,11 @@
 
 load("Jhae.microbiome.RData", verbose = TRUE)
 
+{
+  theme_set(theme_bw())
+  update_theme(legend.position = "bottom")
+  update_theme(axis.ticks = element_blank())
+}
 
 ################################################################################
 # Host plant

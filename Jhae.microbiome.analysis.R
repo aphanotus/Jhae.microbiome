@@ -1387,6 +1387,6 @@ write_delim(x, "collection.sites.tsv", delim = "\t")
 # - "GLM-PCA.R"
 # - "ancom.R"
 # - "aldex.R"
-# - "fastEmu.R"
+# - "MaAsLin3.R"
 # - "permdisp.R
 

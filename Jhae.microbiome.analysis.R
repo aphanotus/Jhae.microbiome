@@ -764,6 +764,8 @@ setwd("~/Documents/3.research/Jhae.microbiome")
   
   plot_alpha_sex
   
+  table(metadata_rare$sex)
+  
   # Alpha diversity by morph
   plot_alpha_morph <- metadata_rare |> 
     filter(morph %in% c("LW","SW")) |> 
@@ -778,6 +780,9 @@ setwd("~/Documents/3.research/Jhae.microbiome")
   
   plot_alpha_morph
   
+  table(metadata_rare$morph)
+  
+  
   # Alpha diversity by host plant   
   plot_alpha_host <- metadata_rare_july |> 
     pivot_longer(cols = all_of(alpha.columns)) |> 
@@ -790,6 +795,8 @@ setwd("~/Documents/3.research/Jhae.microbiome")
     labs(x = NULL, y = "alpha diversity index", title = "Host Plant") 
   
   plot_alpha_host
+  
+  table(metadata_rare_july$host_plant)
   
   # Alpha diversity by month
   plot_alpha_month <- metadata_rare_grt |> 
@@ -804,6 +811,8 @@ setwd("~/Documents/3.research/Jhae.microbiome")
   
   plot_alpha_month
   
+  table(metadata_rare_grt$month)
+  
   # Alpha diversity by urbanicity
   plot_alpha_urban_Obs <- metadata_rare |> 
     ggplot(aes(x = urbanicity, y = observed_ASVs)) +
@@ -816,6 +825,9 @@ setwd("~/Documents/3.research/Jhae.microbiome")
     labs(x = "Urbanicity PC1", y = "Observed ASVs", title = "Urbanicity") 
   
   plot_alpha_urban_Obs
+  
+  sum(!is.na(metadata_rare_grt$urbanicity))
+  sum(!is.na(metadata_rare_grt$green_space))
   
   plot_alpha_urban_shannon <- metadata_rare |> 
     ggplot(aes(x = urbanicity, y = shannon)) +

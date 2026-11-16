@@ -113,18 +113,8 @@ ggsave(
 
 # A figure combining GLM-PCA results with a few of the PCoA plots
 
-pcoa.july.bray.host_plant2 <- pcoa.july.bray.host_plant +
-  stat_ellipse(aes(fill = host_plant), geom = "polygon", alpha = 0.1, show.legend = FALSE) +
-  scale_fill_manual(values = color.by.plant)
-
-
-pcoa.grt.uwUF.month2 <- pcoa.grt.uwUF.month +
-  stat_ellipse(aes(fill = month), geom = "polygon", alpha = 0.1, show.legend = FALSE) +
-  scale_fill_manual(values = color.by.month)
-
-
 ordination_figure <- (
-  plot_glmpca_host | plot_glmpca_month | pcoa.july.bray.host_plant2 | pcoa.grt.uwUF.month2
+  pcoa.july.wUF.host_plant | plot_glmpca_host | plot_glmpca_month
 ) +
   plot_annotation(tag_levels = 'A')
 ordination_figure
@@ -132,7 +122,7 @@ ordination_figure
 ggsave(
   filename = "plots/Fig4.ordination.plots.png", 
   plot = ordination_figure,
-  width = (2.5)*4, height = (2.5)*1, scale = 1.5,
+  width = 6.5, height = 1.85, scale = 1.5,
   dpi = 600, bg = "white"
 )
 
@@ -143,7 +133,6 @@ save(
   count_matrix, glmpca_res, glmpca_coords,
   plot_glmpca_host, plot_glmpca_month,
   glmpca_figure,
-  pcoa.july.bray.host_plant2, pcoa.grt.uwUF.month2,
   ordination_figure,
   file = "Jhae.microbiome.glmpca.RData"
 )

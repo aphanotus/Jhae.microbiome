@@ -13,117 +13,123 @@
 }
 
 load("Jhae.microbiome.RData", verbose = TRUE)
+load("beta.analysis.RData", verbose = TRUE)
 
-# Categorize the continuous green_space variable into tertiles (Low, Med, High)
-metadata_rare_grt <- metadata_rare_grt %>%
-  mutate(
-    green_space_cat = ntile(green_space, 3),
-    green_space_cat = factor(
-      green_space_cat,
-      levels = c(1, 2, 3),
-      labels = c("Low (Urban)", "Medium", "High (Rural)"))
-  )
+# Categorize the continuous intensive_development variable into tertiles (Low, Medium, High)
 
+metadata_grt$intensive_development_tertile <- cut(
+  metadata_grt$intensive_development, 
+  breaks = quantile(metadata_grt$intensive_development, 
+                    probs = seq(0, 1, 1/3), na.rm = TRUE),
+  include.lowest = TRUE, labels = c("Low", "Medium", "High")
+) 
+sample_data(ps_grt) <- sample_data(metadata_grt)
+sample_data(ps_grt_tree) <- sample_data(metadata_grt)
+
+iterations <- 1e5-1
+
+intensive_development_disp_bray <- betadisper(dist_grt_bray, metadata_grt$intensive_development_tertile)
+intensive_development_permtest_bray <- permutest(intensive_development_disp_bray, permutations = iterations)
+print(intensive_development_permtest_bray)
+#            Df Sum Sq Mean Sq      F N.Perm  Pr(>F)  
+# Groups      2 0.2361 0.11803 2.8379  99999 0.06286 .
+# Residuals 135 5.6146 0.04159   
+
+intensive_development_disp_unif <- betadisper(dist_grt_unifrac, metadata_grt$intensive_development_tertile)
+intensive_development_permtest_unif <- permutest(intensive_development_disp_unif, permutations = iterations)
+print(intensive_development_permtest_unif)
+#            Df   Sum Sq   Mean Sq      F N.Perm Pr(>F)
+# Groups      2 0.004268 0.0021342 1.0028  99999 0.3701
+# Residuals 135 0.287323 0.0021283  
+
+intensive_development_disp_rao <- betadisper(dist_grt_rao, metadata_grt$intensive_development_tertile)
+intensive_development_permtest_rao <- permutest(intensive_development_disp_rao, permutations = iterations)
+print(intensive_development_permtest_rao)
+#            Df Sum Sq Mean Sq      F N.Perm  Pr(>F)   
+# Groups      2 0.4665 0.23325 5.5548  99999 0.00451 **
+# Residuals 135 5.6687 0.04199     
 
 {
   theme_set(theme_bw())
   update_theme(legend.position = "none")
   update_theme(axis.ticks = element_blank())
   update_theme(panel.grid.major.x = element_blank())
-  }
+}
 
 # Extract the distance-to-centroid values to see the direction of the variance
 dispersion_bray_for_plot <- data.frame(
-  sample = names(dispersion_bray$distances),
-  distance_to_centroid = dispersion_bray$distances,
-  green_space = metadata_rare_grt$green_space_cat
+  sample = names(intensive_development_disp_bray$distances),
+  distance_to_centroid = intensive_development_disp_bray$distances,
+  intensive_development = metadata_grt$intensive_development_tertile
 )
 
-# Plot the differences in variance of Beta Dispersion by Green Space
-plot_dispersion_bray_by_green_space <- dispersion_bray_for_plot |>
-  ggplot(aes(x = green_space, y = distance_to_centroid, fill = green_space)) +
+# Plot the differences in variance of Beta Dispersion by intensive_development_tertile
+plot_intensive_development_disp_bray <- dispersion_bray_for_plot |>
+  ggplot(aes(x = intensive_development, y = distance_to_centroid, fill = intensive_development)) +
   geom_boxplot(alpha = 0.7, outlier.shape = NA) +
   geom_jitter(width = 0.2, alpha = 0.6) +
   scale_fill_manual(values = c(color.by.urban[1],"palegreen3",color.by.urban[2])) +
+  ylim(c(0,1)) +
   labs(
-    title = "Bray-Curtis Distance",
-    x = "Local Green Space",
+    title = "Bray-Curtis dissimilarity",
+    x = "Urban development ",
     y = "Distance to Group Centroid (Community Variance)"
   )
 
-plot_dispersion_bray_by_green_space
+plot_intensive_development_disp_bray
 
-dispersion_uwUF_for_plot <- data.frame(
-  sample = names(dispersion_uwUF$distances),
-  distance_to_centroid = dispersion_uwUF$distances,
-  green_space = metadata_rare_grt$green_space_cat
+
+dispersion_unifrac_for_plot <- data.frame(
+  sample = names(intensive_development_disp_unif$distances),
+  distance_to_centroid = intensive_development_disp_unif$distances,
+  intensive_development = metadata_grt$intensive_development_tertile
 )
 
-plot_dispersion_uwUF_by_green_space <- dispersion_uwUF_for_plot |>
-  ggplot(aes(x = green_space, y = distance_to_centroid, fill = green_space)) +
+plot_intensive_development_disp_unifrac <- dispersion_unifrac_for_plot |>
+  ggplot(aes(x = intensive_development, y = distance_to_centroid, fill = intensive_development)) +
   geom_boxplot(alpha = 0.7, outlier.shape = NA) +
   geom_jitter(width = 0.2, alpha = 0.6) +
   scale_fill_manual(values = c(color.by.urban[1],"palegreen3",color.by.urban[2])) +
+  ylim(c(0,1)) +
   labs(
     title = "unweighted UniFrac",
-    x = "Local Green Space",
+    x = "Urban development ",
     y = "Distance to Group Centroid (Community Variance)"
   )
 
-plot_dispersion_uwUF_by_green_space
+plot_intensive_development_disp_unifrac
 
-dispersion_wUF_for_plot <- data.frame(
-  sample = names(dispersion_wUF$distances),
-  distance_to_centroid = dispersion_wUF$distances,
-  green_space = metadata_rare_grt$green_space_cat
+
+dispersion_rao_for_plot <- data.frame(
+  sample = names(intensive_development_disp_rao$distances),
+  distance_to_centroid = intensive_development_disp_rao$distances,
+  intensive_development = metadata_grt$intensive_development_tertile
 )
 
-plot_dispersion_wUF_by_green_space <- dispersion_wUF_for_plot |>
-  ggplot(aes(x = green_space, y = distance_to_centroid, fill = green_space)) +
+plot_intensive_development_disp_rao <- dispersion_rao_for_plot |>
+  ggplot(aes(x = intensive_development, y = distance_to_centroid, fill = intensive_development)) +
   geom_boxplot(alpha = 0.7, outlier.shape = NA) +
   geom_jitter(width = 0.2, alpha = 0.6) +
   scale_fill_manual(values = c(color.by.urban[1],"palegreen3",color.by.urban[2])) +
+  ylim(c(0,1)) +
   labs(
-    title = "weighted UniFrac",
-    x = "Local Green Space",
+    title = "Rao's dissimilarity",
+    x = "Urban development ",
     y = "Distance to Group Centroid (Community Variance)"
   )
 
-plot_dispersion_wUF_by_green_space
-
-
-
-dispersion_bray <- betadisper(dist_grt_bray, metadata_rare_grt$green_space_cat)
-permutest_bray <- permutest(dispersion_bray, permutations = 1e5-1)
-print(permutest_bray)
-#            Df  Sum Sq Mean Sq      F N.Perm  Pr(>F)
-# Groups      2  1.4526 0.72629 7.3334  99999 0.00104 **
-# Residuals 136 13.4691 0.09904
-
-dispersion_uwUF <- betadisper(dist_grt_uwUF, metadata_rare_grt$green_space_cat)
-permutest_uwUF <- permutest(dispersion_uwUF, permutations = 1e5-1)
-print(permutest_uwUF)
-#            Df  Sum Sq Mean Sq      F N.Perm Pr(>F)
-# Groups      2 0.4246 0.212289 7.086  99999 0.00155 **
-# Residuals 136 4.0744 0.029959
-
-dispersion_wUF <- betadisper(dist_grt_wUF, metadata_rare_grt$green_space_cat)
-permutest_wUF <- permutest(dispersion_wUF, permutations = 1e5-1)
-print(permutest_wUF)
-#            Df  Sum Sq  Mean Sq      F N.Perm  Pr(>F)
-# Groups      2 0.10743 0.053715 6.3726  99999 0.00223 **
-# Residuals 136 1.14635 0.008429
+plot_intensive_development_disp_rao
 
 
 
 beta_dispersion_figure <- (
-  plot_dispersion_bray_by_green_space | plot_dispersion_uwUF_by_green_space | plot_dispersion_wUF_by_green_space
+  plot_intensive_development_disp_bray | plot_intensive_development_disp_unifrac | plot_intensive_development_disp_rao
 ) +
   plot_annotation(tag_levels = 'A')
 beta_dispersion_figure
 
 ggsave(
-  filename = "plots/Fig6.beta.dispersion.by.green.space.png",
+  filename = "plots/Fig6.beta.dispersion.png",
   plot = beta_dispersion_figure,
   width = 6.5, height = 2.5, scale = 1.75,
   dpi = 600, bg = "white"

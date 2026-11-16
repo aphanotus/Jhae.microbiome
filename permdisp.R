@@ -121,7 +121,6 @@ plot_intensive_development_disp_rao <- dispersion_rao_for_plot |>
 plot_intensive_development_disp_rao
 
 
-
 beta_dispersion_figure <- (
   plot_intensive_development_disp_bray | plot_intensive_development_disp_unifrac | plot_intensive_development_disp_rao
 ) +
@@ -140,5 +139,5 @@ ggsave(
 # Save the key objects
 save(
   beta_dispersion_figure,
-  file = "Jhae.microbiome.permdisp.RData"
+  file = "permdisp.RData"
 )

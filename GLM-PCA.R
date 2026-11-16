@@ -8,7 +8,8 @@
   library(glmpca)
 }
 
-# load("Jhae.microbiome.RData", verbose = TRUE)
+load("Jhae.microbiome.RData", verbose = TRUE)
+load("beta.analysis.RData", verbose = TRUE)
 
 # Extract raw counts
 # `glmpca` expects a matrix with ASVs as rows and samples as columns
@@ -76,30 +77,36 @@ plot_glmpca_month <- glmpca_coords |>
 
 plot_glmpca_month
 
-plot_glmpca_green_space <- glmpca_coords |>
-  ggplot(aes(x = dim1, y = dim2, color = green_space)) +
-  geom_point(size = 3, alpha = 0.85) +
-  # stat_ellipse(
-  #   aes(fill = green_space),
-  #   geom = "polygon", alpha = 0.075, show.legend = FALSE
-  # ) +
+# tertiles
+glmpca_coords$intensive_development_tertile <- cut(
+  glmpca_coords$intensive_development, 
+  breaks = quantile(glmpca_coords$intensive_development, 
+                    probs = seq(0, 1, 1/3), na.rm = TRUE),
+  include.lowest = TRUE, labels = c("Low", "Medium", "High")
+) 
+
+plot_glmpca_intensive_development <- glmpca_coords |>
+  ggplot(aes(x = dim1, y = dim2, color = intensive_development)) +
+  geom_point(size = 3, alpha = 0.8) +
+  scale_color_gradient(name = NULL, low = color.by.urban[1], high = color.by.urban[2]) +
+  stat_ellipse(aes(group = intensive_development_tertile, fill = intensive_development_tertile), 
+               geom = "polygon", alpha = 0.2, color = "gray95") +  
+  scale_fill_manual(values = c("Low" = color.by.urban[1], "Medium" = "palegreen3", "High" = color.by.urban[2])) +
   labs(
     x = "GLM-PC1", y = "GLM-PC2",
-    color = "Green space"
+    fill = "Urban Development"
   ) +
-  scale_color_gradient(low = color.by.urban[1], high = color.by.urban[2]) +
-  # scale_fill_manual(values = color.by.plant) +
   theme_bw() +
   theme(
     legend.position = "bottom"
   ) +
   coord_fixed()
 
-plot_glmpca_green_space
+plot_glmpca_intensive_development
 
 
 glmpca_figure <- (
-  plot_glmpca_host | plot_glmpca_month
+  plot_glmpca_host | plot_glmpca_month | plot_glmpca_intensive_development
 ) +
   plot_annotation(tag_levels = 'A')
 glmpca_figure
@@ -107,14 +114,18 @@ glmpca_figure
 ggsave(
   filename = "plots/GLM-PCA.plots.png",
   plot = glmpca_figure,
-  width = 6.5, height = 3.5, scale = 1.5,
+  width = 6.5, height = 3, scale = 1.5,
   dpi = 600, bg = "white"
 )
 
 # A figure combining GLM-PCA results with a few of the PCoA plots
+pcoa.july.unifrac.host_plant <- pcoa.july.unifrac.host_plant + labs(title=NULL)
+dpcoa.july.rao.host_plant <- dpcoa.july.rao.host_plant + labs(title=NULL)
+
 
 ordination_figure <- (
-  pcoa.july.wUF.host_plant | plot_glmpca_host | plot_glmpca_month
+  (plot_glmpca_host | plot_glmpca_month | plot_glmpca_intensive_development) /
+  (pcoa.july.unifrac.host_plant | dpcoa.july.rao.host_plant | dpcoa.grt.rao.intensive_development)
 ) +
   plot_annotation(tag_levels = 'A')
 ordination_figure
@@ -122,7 +133,7 @@ ordination_figure
 ggsave(
   filename = "plots/Fig4.ordination.plots.png", 
   plot = ordination_figure,
-  width = 6.5, height = 1.85, scale = 1.5,
+  width = 6.5, height = 3, scale = 1.75,
   dpi = 600, bg = "white"
 )
 
@@ -131,8 +142,8 @@ ggsave(
 # Save the key objects
 save(
   count_matrix, glmpca_res, glmpca_coords,
-  plot_glmpca_host, plot_glmpca_month,
+  plot_glmpca_host, plot_glmpca_month, plot_glmpca_intensive_development,
   glmpca_figure,
   ordination_figure,
-  file = "Jhae.microbiome.glmpca.RData"
+  file = "glmpca.RData"
 )

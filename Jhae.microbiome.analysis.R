@@ -58,7 +58,7 @@ setwd("~/Documents/3.research/Jhae.microbiome")
 
 
 ################################################################################
-# Load the data and perform inital processing
+# Load the data and perform initial processing
 {
   # Load feature table
   {
@@ -189,42 +189,6 @@ setwd("~/Documents/3.research/Jhae.microbiome")
     !(Genus %in% "Wolbachia")
   )
 
-  # {
-  #   # Extract the ASV table
-  #   # (Ensure taxa are columns and samples are rows)
-  #   otu_table_ps <- as(otu_table(ps), "matrix")
-  #   if (taxa_are_rows(ps)) {
-  #     otu_table_ps <- t(otu_table_ps)
-  #   }
-  # 
-  #   # Plot the rarefaction curve, zooming in on the 0-500 read range
-  #   rarecurve(
-  #     otu_table_ps,
-  #     step = 50,
-  #     xlim = c(0, 2000), ylim = c(0,100),
-  #     main = "Rarefaction Curves (Wolbachia Removed)",
-  #     xlab = "Sequencing Depth", ylab = "Number of ASVs"
-  #   )
-  #   abline(v=c(100,500,1000, 2000), lty = 2, col = "darkred")
-  # }
-  # 
-  # x <- prune_samples(sample_sums(ps) >= 100, ps)
-  # prune_taxa(taxa_sums(x) > 0, x)
-  # x <- prune_samples(sample_sums(ps) >= 500, ps)
-  # prune_taxa(taxa_sums(x) > 0, x)
-  # x <- prune_samples(sample_sums(ps) >= 1000, ps)
-  # prune_taxa(taxa_sums(x) > 0, x)
-  # x <- prune_samples(sample_sums(ps) >= 2000, ps)
-  # prune_taxa(taxa_sums(x) > 0, x)
-  
-  # | read min | taxa |       | samples |       |
-  # | -------- | ---- | ----- | ------- | ----- |
-  # | NA       | 2148 |    NA | 175     |    NA |
-  # | 100      | 2133 | 99.3% | 163     | 93.1% |
-  # | 500      | 2101 | 97.8% | 153     | 87.4% |
-  # | 1000     | 2064 | 96.0% | 144     | 82.3% |
-  # | 2000     | 2055 | 95.7% | 138     | 78.9% |
-  
   # Remove samples with fewer than 1000 total reads
   read.count.threshold <- 1000
   ps <- prune_samples(sample_sums(ps) >= read.count.threshold, ps)
@@ -339,7 +303,7 @@ write.csv(collection.sites, "tables/TableS1.collection.sites.csv", row.names = F
   ps_main_family <- tax_glom(ps_main, taxrank = "Family")
   ps_rel <- transform_sample_counts(ps_main_family, function(x) x / sum(x, na.rm = TRUE))
   
-  # Melt the phyloseq object into a tidy data frame for ggplot
+  # Melt the PhyloSeq object into a tidy data frame for ggplot
   df_rel <- psmelt(ps_rel)
   
   # Find the top 9 most abundant Families overall
@@ -358,6 +322,8 @@ write.csv(collection.sites, "tables/TableS1.collection.sites.csv", row.names = F
   
   # Arrange the data frame by metadata for visual order
   plot_composition <- df_plot |>
+    mutate(host_plant = str_replace(host_plant,"BV","C. corindum")) |> 
+    mutate(host_plant = str_replace(host_plant,"GRT","K. paniculata")) |> 
     arrange(month) |>
     mutate(Sample = factor(Sample, levels = unique(Sample))) |> 
     ggplot(aes(x = Sample, y = Abundance, fill = Family_Clean)) +
@@ -380,10 +346,15 @@ write.csv(collection.sites, "tables/TableS1.collection.sites.csv", row.names = F
   
   # plot_composition
   
+  # Sum the 'Other' families within each individual sample first
+  df_sample_agg <- df_plot |>
+    group_by(Sample, host_plant, month, intensive_development, Family_Clean) |>
+    summarize(Total_Abundance = sum(Abundance, na.rm = TRUE), .groups = 'drop')
+  
   # Group by host_plant, then calculate the average relative abundance
-  plot_composition_grouped_by_host_plant <- df_plot |>
+  plot_composition_grouped_by_host_plant <- df_sample_agg |>
     group_by(host_plant, Family_Clean) |>
-    summarize(Mean_Abundance = mean(Abundance, na.rm = TRUE), .groups = 'drop') |> 
+    summarize(Mean_Abundance = mean(Total_Abundance, na.rm = TRUE), .groups = 'drop') |> 
     ggplot(aes(x = host_plant, y = Mean_Abundance, fill = Family_Clean)) +
     geom_col(width = 0.7, color = "white", linewidth = 0.1) + 
     scale_y_continuous(labels = scales::percent, expand = c(0,0)) + 
@@ -403,9 +374,9 @@ write.csv(collection.sites, "tables/TableS1.collection.sites.csv", row.names = F
   # plot_composition_grouped_by_host_plant
   
   # Group by month, then calculate the average relative abundance
-  plot_composition_grouped_by_month <- df_plot |>
+  plot_composition_grouped_by_month <- df_sample_agg |>
     group_by(month, Family_Clean) |>
-    summarize(Mean_Abundance = mean(Abundance, na.rm = TRUE), .groups = 'drop') |> 
+    summarize(Mean_Abundance = mean(Total_Abundance, na.rm = TRUE), .groups = 'drop') |> 
     ggplot(aes(x = month, y = Mean_Abundance, fill = Family_Clean)) +
     geom_col(width = 0.7, color = "white", linewidth = 0.1) + 
     scale_y_continuous(labels = scales::percent, expand = c(0,0)) + 
@@ -424,14 +395,49 @@ write.csv(collection.sites, "tables/TableS1.collection.sites.csv", row.names = F
   
   # plot_composition_grouped_by_month
   
-  composition_figure <- (plot_composition | plot_composition_grouped_by_host_plant | plot_composition_grouped_by_month) +
+  # Determine the median value to split samples by intensive_development
+  median_dev <- median(df_sample_agg$intensive_development, na.rm = TRUE)
+  
+  # Assign "High" or "Low" intensive_development based on the median, summarize, and plot
+  plot_composition_grouped_by_dev <- df_sample_agg |>
+    mutate(dev_bin = ifelse(intensive_development > median_dev, "High", "Low")) |>
+    mutate(dev_bin = factor(dev_bin, levels = c("Low", "High"))) |>
+    group_by(dev_bin, Family_Clean) |>
+    summarize(Mean_Abundance = mean(Total_Abundance, na.rm = TRUE), .groups = 'drop') |> 
+    ggplot(aes(x = dev_bin, y = Mean_Abundance, fill = Family_Clean)) +
+    geom_col(width = 0.7, color = "white", linewidth = 0.1) + 
+    scale_y_continuous(labels = scales::percent, expand = c(0,0)) + 
+    scale_fill_viridis(discrete = TRUE) +
+    labs(
+      x = NULL, y = NULL,
+      fill = "Bacterial Family"
+    ) +
+    theme_minimal() +
+    theme(
+      # Keeping axis text here so "Low" and "High" are visible
+      axis.text.x = element_text(angle = 0, hjust = 0.5), 
+      panel.grid.major.x = element_blank(), 
+      legend.position = "none",
+      panel.spacing = unit(0.2, "lines") 
+    )
+  
+  plot_composition_grouped_by_dev
+  
+  composition_figure <- (plot_composition | plot_composition_grouped_by_host_plant | plot_composition_grouped_by_month | plot_composition_grouped_by_dev) +
     plot_annotation(tag_levels = 'A') +
-    plot_layout(widths = c(9, 1, 1), axes = "collect")
+    plot_layout(widths = c(9, 1, 1, 1), axes = "collect")
   
   print(composition_figure)
   
   ggsave(
     filename = "plots/Fig1.composition.barplots.png", 
+    plot = composition_figure,
+    width = 9, height = 3, scale = 1.75, 
+    dpi = 300, bg = "white"
+  )
+  
+  ggsave(
+    filename = "plots/Fig1.composition.barplots.pdf", 
     plot = composition_figure,
     width = 9, height = 3, scale = 1.75, 
     dpi = 300, bg = "white"

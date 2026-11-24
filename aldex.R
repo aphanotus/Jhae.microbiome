@@ -1,6 +1,15 @@
 ################################################################################
 # Differential Abundance Testing with ALDEx2
 
+# Clear memory
+# {
+#   rm(list=ls())
+#   .rs.restartR()
+#   gc()
+# }
+
+setwd("~/Documents/3.research/Jhae.microbiome")
+
 {
   library(tidyverse)
   library(phyloseq)
@@ -8,6 +17,7 @@
 }
 
 load("Jhae.microbiome.RData", verbose = TRUE)
+# load("aldex.RData", verbose = TRUE)
 
 {
   theme_set(theme_bw())
@@ -52,7 +62,6 @@ load("Jhae.microbiome.RData", verbose = TRUE)
 
   aldex_host_sig
 
-  write.csv(aldex_host_sig, "tables/TableSX.ALDEx2.host.csv", row.names = FALSE)
 
   aldex_host_plot_df <- aldex_host |>
     rownames_to_column(var = "ASV_ID") |>
@@ -132,7 +141,6 @@ load("Jhae.microbiome.RData", verbose = TRUE)
 
   aldex_month_sig
 
-  write.csv(aldex_month_sig, "tables/TableSX.ALDEx2.month.csv", row.names = FALSE)
 
   aldex_month_plot_df <- aldex_month |>
     rownames_to_column(var = "ASV_ID") |>
@@ -184,20 +192,19 @@ load("Jhae.microbiome.RData", verbose = TRUE)
 }
 
 ################################################################################
-# Green Space
+# intensive_development
 {
-  # Standardize the green_space variable (Calculate Z-scores)
-  # ((value - mean) / standard deviation)
-  sample_data(ps_main)$green_space_z <- scale(sample_data(ps_main)$green_space)
+  # Convert area to hectares 
+  sample_data(ps_main)$intensive_development_ha <- sample_data(ps_main)$intensive_development / 10000
   metadata_main <- as(sample_data(ps_main), "data.frame")
-
+  
   counts_main <- round(as(otu_table(ps_main), "matrix"))
-
+  
   # Build the model matrix
-  model_matrix <- model.matrix(~ green_space_z, data = metadata_main)
-
+  model_matrix <- model.matrix(~ intensive_development_ha, data = metadata_main)
+  
   taxa_main <- as.data.frame(as(tax_table(ps_main), "matrix"))
-
+  
   # ALDEx2 CLR transformation
   set.seed(123)
   aldex_clr <- aldex.clr(
@@ -206,38 +213,39 @@ load("Jhae.microbiome.RData", verbose = TRUE)
     mc.samples = 128,
     denom = "all"
   )
-
+  
   # Fits the continuous model across all Monte Carlo instances
   aldex_glm_results <- aldex.glm(aldex_clr, model_matrix)
-
-  aldex_green_sig <- aldex_glm_results |>
+  
+  aldex_intensive_dev_sig <- aldex_glm_results |>
     rownames_to_column(var = "ASV_ID") |>
     left_join(taxa_main |> rownames_to_column(var = "ASV_ID"), by = "ASV_ID") |>
     # Rename the specific GLM columns to standardized names
     rename(
-      LogFoldChange = `green_space_z:Est`,
-      p_val = `green_space_z:pval`,
-      q_val_FDR = `green_space_z:pval.padj`
+      LogFoldChange = `intensive_development_ha:Est`,
+      p_val = `intensive_development_ha:pval`,
+      q_val_FDR = `intensive_development_ha:pval.padj`
     )
-
-  any(aldex_green_sig$`green_space_z:pval.padj` <= 0.05)
+  
+  any(aldex_intensive_dev_sig$`intensive_development_ha:pval.padj` <= 0.05)
   # FALSE
   # No significant ASVs!
-
-  sum(aldex_green_sig$`green_space_z:pval` <= 0.05)
+  
+  sum(aldex_intensive_dev_sig$`intensive_development_ha:pval` <= 0.05)
   # 0
-
+  
   # Try this at the Family level
-  sample_data(ps_family)$green_space_z <- scale(sample_data(ps_family)$green_space)
+  ps_family <- tax_glom(ps_main, taxrank = "Family")
+  ps_family <- subset_taxa(ps_family, !is.na(Family))
   metadata_family <- as(sample_data(ps_family), "data.frame")
-
+  
   counts_family <- round(as(otu_table(ps_family), "matrix"))
-
+  
   # Build the model matrix
-  model_matrix <- model.matrix(~ green_space_z, data = metadata_family)
-
+  model_matrix <- model.matrix(~ intensive_development_ha, data = metadata_family)
+  
   taxa_family <- as.data.frame(as(tax_table(ps_family), "matrix"))
-
+  
   # ALDEx2 CLR transformation
   set.seed(123)
   aldex_clr <- aldex.clr(
@@ -246,27 +254,29 @@ load("Jhae.microbiome.RData", verbose = TRUE)
     mc.samples = 128,
     denom = "all"
   )
-
+  
   # Fits the continuous model across all Monte Carlo instances
   aldex_glm_results <- aldex.glm(aldex_clr, model_matrix)
-
-  aldex_green_sig <- aldex_glm_results |>
+  
+  aldex_intensive_dev_sig <- aldex_glm_results |>
     rownames_to_column(var = "ASV_ID") |>
     left_join(taxa_main |> rownames_to_column(var = "ASV_ID"), by = "ASV_ID") |>
     # Rename the specific GLM columns to standardized names
     rename(
-      LogFoldChange = `green_space_z:Est`,
-      p_val = `green_space_z:pval`,
-      q_val_FDR = `green_space_z:pval.padj`
+      LogFoldChange = `intensive_development_ha:Est`,
+      p_val = `intensive_development_ha:pval`,
+      q_val_FDR = `intensive_development_ha:pval.padj`
     )
-
-  any(aldex_green_sig$q_val_FDR <= 0.05)
+  
+  any(aldex_intensive_dev_sig$q_val_FDR <= 0.05)
   # FALSE
   # No significant ASVs!
-
+  
   # I also tried looking at just the GRT dataset,
   # and there were no significant results.
 }
+
+
 
 ################################################################################
 # ALDEx Volcano Plot Figure
@@ -284,6 +294,15 @@ ggsave(
   dpi = 600, bg = "white"
 )
 
+################################################################################
+# Combine results
+
+aldex_results <- bind_rows(
+  aldex_host_sig, aldex_month_sig
+) |> 
+  relocate(contrast)
+
+write.csv(aldex_results, "tables/TableS9.ALDEx2.results.csv", row.names = FALSE)
 
 
 ################################################################################
@@ -291,8 +310,6 @@ ggsave(
 save(
   counts_july, conditions_july, aldex_host, taxa_july, aldex_host_sig, aldex_host_plot_df, plot_aldex_host,
   counts_grt, conditions_grt, aldex_month, taxa_grt, aldex_month_sig, aldex_month_plot_df, plot_aldex_month,
-  aldex_figure,
-  ps_main,
-  beta_dispersion_figure,
-  file = "Jhae.microbiome.aldex.RData"
+  aldex_figure, aldex_results,
+  file = "aldex.RData"
 )

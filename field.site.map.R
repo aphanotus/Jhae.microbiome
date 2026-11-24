@@ -1,6 +1,17 @@
 ################################################################################
 # Map of field sites
 
+setwd("~/Documents/3.research/Jhae.microbiome")
+
+# Clear memory
+# {
+#   rm(list=ls())
+#   .rs.restartR()
+#   gc()
+# }
+
+# load("Jhae.microbiome.RData", verbose = TRUE)
+
 {
   library(tidyverse)
   library(sf)
@@ -28,7 +39,7 @@ sites <- read.csv("qiime/curated.metadata.csv", header = TRUE) |>
   ) |>
   st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
 
-sites
+# sites
 
 fl_cities <- tibble(
   location = c("Miami", "Orlando", "Tampa", "Jacksonville", "Fort Myers","Pensacola"),
@@ -62,7 +73,7 @@ plot.field.sites <- ggplot() +
 plot.field.sites
 
 ggsave(
-  filename = "plots/FigS1.field.sites.png", 
+  filename = "plots/FigS1.field.sites.png",
   plot = plot.field.sites,
   width = 4.5, height = 4.5, scale = 1,
   dpi = 300, bg = "white"

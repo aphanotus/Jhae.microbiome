@@ -1,6 +1,15 @@
 ################################################################################
 # Differential Abundance Testing with ANCOM-BC2
 
+setwd("~/Documents/3.research/Jhae.microbiome")
+
+# Clear memory
+# {
+#   rm(list=ls())
+#   .rs.restartR()
+#   gc()
+# }
+
 {
   library(tidyverse)
   library(phyloseq)
@@ -9,8 +18,11 @@
 
 load("Jhae.microbiome.RData", verbose = TRUE)
 
-# Collapse the data to different  taxonomic levels for eacxh subset
+# Collapse the data to different  taxonomic levels for each subset
 {
+  # Convert area to hectares 
+  sample_data(ps_main)$intensive_development_ha <- sample_data(ps_main)$intensive_development / 10000
+  
   ps_main_phylum <- tax_glom(ps_main, taxrank = "Phylum")
   ps_main_phylum <- subset_taxa(ps_main_phylum, !is.na(Phylum))
   ps_main_family <- tax_glom(ps_main, taxrank = "Family")
@@ -68,14 +80,14 @@ clean_ancom_table <- function(df, level_name, feature_col, contrast_name) {
     relocate(any_of(c("Phylum", "Class", "Order", "Family", "Genus", "Species")), .after = last_col())
 }
 
-# Explanation of ANCOM-BC2 arguments
+# Explanation of `ancombc2` arguments
 #   p_adj_method = "holm", # Adjusts p-values to prevent false positives
-#   struc_zero = TRUE,     # Detects if a Phylum is 100% missing in a specific plant
-#   neg_lb = TRUE,         # Helps classify true differences
+#   struc_zero = TRUE,     # Detects if a taxon is missing in one group
+#   neg_lb = TRUE,         # Call structural zero using asymptotic lower bound
 
 # Host plant
 {
-  # Host Plant / Pylum
+  # Host Plant / Phylum
   ancom_phylum_host <- ancombc2(
     data = ps_july_phylum,
     fix_formula = "host_plant", group = "host_plant",
@@ -150,8 +162,6 @@ clean_ancom_table <- function(df, level_name, feature_col, contrast_name) {
   ) %>% arrange(Analysis_Level, q_val_FDR)
 
   table_ancom_host
-
-  write.csv(table_ancom_host, "tables/TableSX.ANCOM.host.csv", row.names = FALSE)
 }
 
 # Month
@@ -224,83 +234,86 @@ clean_ancom_table <- function(df, level_name, feature_col, contrast_name) {
   ) %>% arrange(Analysis_Level, q_val_FDR)
 
   table_ancom_month
-
-  write.csv(table_ancom_month, "tables/TableSX.ANCOM.month.csv", row.names = FALSE)
 }
 
-# Green Space
+# intensive_development
 {
   ##########
-  # Green Space / Pylum
-  ancom_phylum_green_space <- ancombc2(
-    data = ps_main_phylum,
-    fix_formula = "green_space", group = "green_space",
-    p_adj_method = "holm",
-    struc_zero = FALSE, neg_lb = TRUE,
-    alpha = 0.05
-  )
-
-  taxa <- as.data.frame(tax_table(ps_main_phylum)) |>
-    rownames_to_column(var = "taxon")
-
-  any(ancom_phylum_green_space$res$q_green_space <= 0.05)
-
-  # ancom_phylum_green_space_results <- ancom_phylum_green_space$res |>
-  #   left_join(taxa, by = "taxon") |>
-  #   filter(q_green_space <= 0.05) |>
-  #   relocate(Phylum, .after = taxon) |>
-  #   dplyr::select(-taxon, -Kingdom)
-
+  # intensive_development / Pylum
+  # Don't work for a continuous factor, since the number of taxa 
+  # at the phylum level is too small for ANCOM 
+  
   ##########
-  # Green Space / Family
-  ancom_family_green_space <- ancombc2(
+  # intensive_development / Family
+  ancom_family_intensive_development <- ancombc2(
     data = ps_main_family,
-    fix_formula = "green_space", group = "green_space",
+    fix_formula = "intensive_development_ha", 
+    group = NULL,
+    struc_zero = FALSE,
+    neg_lb = FALSE,
+    global = FALSE,
+    pairwise = FALSE,
+    dunnet = FALSE,
+    trend = FALSE,
     p_adj_method = "holm",
-    struc_zero = FALSE, neg_lb = TRUE,
     alpha = 0.05
   )
-
+  
   taxa <- as.data.frame(tax_table(ps_main_family)) |>
     rownames_to_column(var = "taxon")
-
-  ancom_family_green_space_results <- ancom_family_green_space$res |>
+  
+  ancom_family_intensive_development_results <- ancom_family_intensive_development$res |>
     left_join(taxa, by = "taxon") |>
-    filter(q_green_space <= 0.05) |>
+    filter(q_intensive_development_ha <= 0.05) |>
     relocate(Family, .after = taxon) |>
     dplyr::select(-taxon, -Kingdom)
-
+  
   ##########
-  # Green Space / ASV
-  ancom_asv_green_space <- ancombc2(
+  # intensive_development / ASV
+  ancom_asv_intensive_development <- ancombc2(
     data = ps_main_asv,
-    fix_formula = "green_space", group = "green_space",
+    fix_formula = "intensive_development_ha", 
+    group = NULL,
+    struc_zero = FALSE,
+    neg_lb = FALSE,
+    global = FALSE,
+    pairwise = FALSE,
+    dunnet = FALSE,
+    trend = FALSE,
     p_adj_method = "holm",
-    struc_zero = FALSE, neg_lb = TRUE,
     alpha = 0.05
   )
-
+  
   taxa <- as.data.frame(tax_table(ps_main_asv)) |>
     rownames_to_column(var = "taxon")
-
-  ancom_asv_green_space_results <- ancom_asv_green_space$res |>
+  
+  ancom_asv_intensive_development_results <- ancom_asv_intensive_development$res |>
     left_join(taxa, by = "taxon") |>
-    filter(q_green_space <= 0.05) |>
+    filter(q_intensive_development_ha <= 0.05) |>
     relocate(Family, .after = taxon) |>
     dplyr::select(-Kingdom)
-
+  
   # Assemble all tables
-  table_ancom_green_space <- bind_rows(
-    # clean_ancom_table(ancom_phylum_green_space_results, "Phylum", "Phylum", "green_space"),
-    clean_ancom_table(ancom_family_green_space_results, "Family", "Family", "green_space"),
-    clean_ancom_table(ancom_asv_green_space_results, "ASV", "taxon", "green_space")
+  table_ancom_intensive_development <- bind_rows(
+    # clean_ancom_table(ancom_phylum_intensive_development_results, "Phylum", "Phylum", "intensive_development_ha"),
+    clean_ancom_table(ancom_family_intensive_development_results, "Family", "Family", "intensive_development_ha"),
+    clean_ancom_table(ancom_asv_intensive_development_results, "ASV", "taxon", "intensive_development_ha")
   ) %>% arrange(Analysis_Level, q_val_FDR)
-
-  table_ancom_green_space
-
-  write.csv(table_ancom_green_space, "tables/TableSX.ANCOM.green_space.csv", row.names = FALSE)
+  
+  table_ancom_intensive_development
 }
 
+ancom.results <- bind_rows(
+  table_ancom_host,
+  table_ancom_month,
+  table_ancom_intensive_development
+) |> 
+  select(
+    Contrast, Analysis_Level, Feature_ID, LogFoldChange, StdError, W_stat, p_val, q_val_FDR,
+    Phylum, Class, Order, Family, Genus, Species
+  )
+
+write.csv(ancom.results, "tables/TableS8.ANCOM.results.csv", row.names = FALSE)
 
 ################################################################################
 # Save the key objects
@@ -315,8 +328,9 @@ save(
   ancom_phylum_month, ancom_phylum_month_results,
   ancom_family_month, ancom_family_month_results,
   ancom_asv_month, ancom_asv_month_results, table_ancom_month,
-  # ancom_phylum_green_space, ancom_phylum_green_space_results,
-  ancom_family_green_space, ancom_family_green_space_results,
-  ancom_asv_green_space, ancom_asv_green_space_results, table_ancom_green_space,
-  file = "Jhae.microbiome.ancom.RData"
+  # ancom_phylum_intensive_development, ancom_phylum_intensive_development_results,
+  ancom_family_intensive_development, ancom_family_intensive_development_results,
+  ancom_asv_intensive_development, ancom_asv_intensive_development_results, table_ancom_intensive_development,
+  ancom.results,
+  file = "ancom.RData"
 )

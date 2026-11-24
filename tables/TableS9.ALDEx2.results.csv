@@ -1,0 +1,11 @@
+"contrast","ASV_ID","diff.btw","effect","wi.ep","wi.eBH","Phylum","Class","Order","Family","Genus","Species"
+"host_plant","5f9403f34de2d6658df09b913aa13184",-14.3244134662228,-5.64132700686872,0.000181745348520224,0.0385693677816132,"Proteobacteria","Alphaproteobacteria",NA,NA,NA,NA
+"host_plant","feeb651ed135a05fff03c033989caded",-8.56311154441211,-2.76261687529857,0.000182774622946903,0.0385693677816132,"Actinobacteriota","Actinobacteria","Micrococcales","Microbacteriaceae",NA,NA
+"host_plant","3cc27a22b5adf4e21f48c1f09ee198de",-11.1134087089302,-2.67400496857408,0.000181951203405559,0.0385693677816132,"Proteobacteria","Alphaproteobacteria","Caulobacterales","Caulobacteraceae","Caulobacter",NA
+"host_plant","b41466d5c68bc8c82d1112090070eac5",-8.1133968065388,-2.65196770791542,0.000181848275962892,0.0385693677816132,"Proteobacteria","Alphaproteobacteria","Rhizobiales","Xanthobacteraceae","Ancylobacter",NA
+"host_plant","90dc413777fc22c4efdda035d0b2edd0",-9.64586433440331,-2.60000021531836,0.00018904279362577,0.0386005203551573,"Proteobacteria","Alphaproteobacteria","Acetobacterales","Acetobacteraceae","Roseomonas",NA
+"host_plant","221659bea0a1fb86d90ab90a24cd7dfe",-10.1689062621878,-2.56979721547878,0.000181745348520224,0.0385693677816132,"Proteobacteria","Alphaproteobacteria","Sphingomonadales","Sphingomonadaceae",NA,NA
+"host_plant","d4bd832cf0d317de0398bb651efb5c4e",-6.86987908968083,-2.0637710853161,0.000233588807386048,0.0429085207730146,"Proteobacteria","Alphaproteobacteria","Rhizobiales","Xanthobacteraceae","Xanthobacter",NA
+"host_plant","557f58bf67369856d2d47fb274d6e4bc",-7.40501488239542,-1.88814418537758,0.000213631788400646,0.0414838186575653,"Verrucomicrobiota","Verrucomicrobiae","Verrucomicrobiales","Rubritaleaceae","Luteolibacter",NA
+"month","fcb2943f9c7b866112a146c62e824bdb",7.30789618874046,0.753485958752117,5.71896569058136e-07,0.000955778362798837,"Firmicutes","Bacilli","Lactobacillales","Lactobacillaceae","Pediococcus",NA
+"month","8084aa68823c09679d87c31776e22478",5.59619510106839,0.5765342427184,8.93634878702983e-06,0.00721588110512876,"Firmicutes","Bacilli","Lactobacillales","Streptococcaceae","Lactococcus",NA

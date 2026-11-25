@@ -325,5 +325,5 @@ save(
   alpha.combined,
   plot.alpha.host, plot.alpha.month, plot.alpha.scrub, 
   alpha.figure,
-  file = "alpha.RData"
+  file = "alpha.analysis.RData"
 )

@@ -18,6 +18,7 @@ setwd("~/Documents/3.research/Jhae.microbiome")
 
 load("Jhae.microbiome.RData", verbose = TRUE)
 load("beta.analysis.RData", verbose = TRUE)
+# load("permdisp.RData", verbose = TRUE)
 
 # Categorize the continuous intensive_development variable into tertiles (Low, Medium, High)
 

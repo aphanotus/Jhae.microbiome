@@ -720,8 +720,8 @@ save.image("Jhae.microbiome.RData")
 # - "alpha.analysis.R"
 # - "beta.analysis.R"
 # - "GLM-PCA.R"
-# - "permdisp.R
 # - "ancom.R"
 # - "aldex.R"
 # - "MaAsLin3.R"
-
+# - "consensus.DA.plot.R"
+# - "permdisp.R"

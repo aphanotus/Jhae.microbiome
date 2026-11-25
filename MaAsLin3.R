@@ -245,7 +245,7 @@ maaslin.results <- bind_rows(
 ) |>
   dplyr::select(-name, -null_hypothesis, -Kingdom)
 
-write.csv(maaslin.results, "tables/TableS9.MaAsLin3.results.csv", row.names = FALSE)
+write.csv(maaslin.results, "tables/TableS10.MaAsLin3.results.csv", row.names = FALSE)
 
 ################################################################################
 # Save the key objects

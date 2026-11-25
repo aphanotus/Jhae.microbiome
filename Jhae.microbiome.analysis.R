@@ -51,7 +51,7 @@ setwd("~/Documents/3.research/Jhae.microbiome")
   color.by.morph <- c("darkgreen","darkred")
   color.by.month <- c("#4575b4","#FF8559")
   color.by.plant <- c("#9acd32","#DAA520")
-  color.by.urban <- c("forestgreen","gray40")
+  color.by.urban <- c("forestgreen","#4C734C","gray40")
   
   uuid.abbrev <- 8
 }
@@ -215,10 +215,10 @@ collection.sites <- metadata_main |>
     Host_plant = unique(host_plant),
     Sample_size_in_January = sum(month == "January", na.rm = TRUE),
     Sample_size_in_July = sum(month == "July", na.rm = TRUE),
-    Intensive_development_m2 = unique(intensive_development),
-    Green_space_m2 = unique(green_space)
+    Intensive_development_ha = unique(intensive_development)/1e5,
+    Green_space_ha = unique(green_space)/1e5
   ) |> 
-  arrange(desc(Intensive_development_m2))
+  arrange(desc(Intensive_development_ha))
 
 write.csv(collection.sites, "tables/TableS1.collection.sites.csv", row.names = FALSE)
 
@@ -346,6 +346,8 @@ write.csv(collection.sites, "tables/TableS1.collection.sites.csv", row.names = F
   
   # plot_composition
   
+  # length(unique(df_plot$Sample))
+  
   # Sum the 'Other' families within each individual sample first
   df_sample_agg <- df_plot |>
     group_by(Sample, host_plant, month, intensive_development, Family_Clean) |>
@@ -355,6 +357,8 @@ write.csv(collection.sites, "tables/TableS1.collection.sites.csv", row.names = F
   plot_composition_grouped_by_host_plant <- df_sample_agg |>
     group_by(host_plant, Family_Clean) |>
     summarize(Mean_Abundance = mean(Total_Abundance, na.rm = TRUE), .groups = 'drop') |> 
+    mutate(host_plant = str_replace(host_plant, "BV", "C. corindum")) |> 
+    mutate(host_plant = str_replace(host_plant, "GRT", "K. paniculata")) |> 
     ggplot(aes(x = host_plant, y = Mean_Abundance, fill = Family_Clean)) +
     geom_col(width = 0.7, color = "white", linewidth = 0.1) + 
     scale_y_continuous(labels = scales::percent, expand = c(0,0)) + 
@@ -365,7 +369,7 @@ write.csv(collection.sites, "tables/TableS1.collection.sites.csv", row.names = F
     ) +
     theme_minimal() +
     theme(
-      axis.text.x = element_blank(),
+      axis.text.x = element_text(face = "italic", angle = 30, hjust = 1, vjust = 1),
       panel.grid.major.x = element_blank(), 
       legend.position = "none",
       panel.spacing = unit(0.2, "lines") 
@@ -387,7 +391,7 @@ write.csv(collection.sites, "tables/TableS1.collection.sites.csv", row.names = F
     ) +
     theme_minimal() +
     theme(
-      axis.text.x = element_blank(),
+      axis.text.x = element_text(face = "italic", angle = 30, hjust = 1, vjust = 1),
       panel.grid.major.x = element_blank(), 
       legend.position = "none",
       panel.spacing = unit(0.2, "lines") 
@@ -414,14 +418,13 @@ write.csv(collection.sites, "tables/TableS1.collection.sites.csv", row.names = F
     ) +
     theme_minimal() +
     theme(
-      # Keeping axis text here so "Low" and "High" are visible
-      axis.text.x = element_text(angle = 0, hjust = 0.5), 
+      axis.text.x = element_text(face = "italic", angle = 30, hjust = 1, vjust = 1),
       panel.grid.major.x = element_blank(), 
       legend.position = "none",
       panel.spacing = unit(0.2, "lines") 
     )
   
-  plot_composition_grouped_by_dev
+  # plot_composition_grouped_by_dev
   
   composition_figure <- (plot_composition | plot_composition_grouped_by_host_plant | plot_composition_grouped_by_month | plot_composition_grouped_by_dev) +
     plot_annotation(tag_levels = 'A') +
@@ -471,7 +474,7 @@ write.csv(collection.sites, "tables/TableS1.collection.sites.csv", row.names = F
 {
   # Calculate Mean Relative Abundance
   ps_bv_rel <- transform_sample_counts(ps_bv, function(x) x / sum(x, na.rm = TRUE))
-  mean_abundance <- taxa_sums(ps_bv_rel) / nsamples(ps_bv_rel)
+  mean_abund_bv <- taxa_sums(ps_bv_rel) / nsamples(ps_bv_rel)
   
   # Calculate Prevalence
   # Convert raw counts to presence/absence (1 or 0), then calculate the percentage of samples
@@ -480,7 +483,7 @@ write.csv(collection.sites, "tables/TableS1.collection.sites.csv", row.names = F
   # Combine 
   bv_summary <- data.frame(
     ASV_ID = taxa_names(ps_bv),
-    Mean_Abundance = mean_abundance,
+    Mean_Abundance = mean_abund_bv,
     Prevalence = taxa_sums(ps_bv_pa) / nsamples(ps_bv_pa),
     as(tax_table(ps_bv), "matrix") # Attaches the taxonomy
   ) |> 
@@ -608,7 +611,7 @@ write.csv(collection.sites, "tables/TableS1.collection.sites.csv", row.names = F
   grt_samples <- sample_names(subset_samples(ps_july_rel, host_plant == "GRT"))
   
   # Extract the ASV matrix
-  otu_matrix <- as(otu_table(ps_july_rel), "matrix")
+  asv_matrix <- as(otu_table(ps_july_rel), "matrix")
   
   # Function to calculate prevalence and mean abundance
   prevalence.and.abundance <- function(mat, samples, host_name) {
@@ -624,8 +627,8 @@ write.csv(collection.sites, "tables/TableS1.collection.sites.csv", row.names = F
   }
   
   # Calculate metrics for both groups and combine
-  df_bv <- prevalence.and.abundance(otu_matrix, bv_samples, "BV")
-  df_grt <- prevalence.and.abundance(otu_matrix, grt_samples, "GRT")
+  df_bv <- prevalence.and.abundance(asv_matrix, bv_samples, "BV")
+  df_grt <- prevalence.and.abundance(asv_matrix, grt_samples, "GRT")
   plot_df <- bind_rows(df_bv, df_grt) |> 
     mutate(host_plant = str_replace(host_plant, "BV", "C. corindum")) |> 
     mutate(host_plant = str_replace(host_plant, "GRT", "K. paniculata")) 
@@ -708,8 +711,26 @@ write.csv(collection.sites, "tables/TableS1.collection.sites.csv", row.names = F
 
 
 ################################################################################
-# Save the image
-save.image("Jhae.microbiome.RData")
+# Save key objects
+save(
+  color.by.sex, color.by.morph, color.by.month, color.by.plant, color.by.urban, uuid.abbrev,
+  taxonomy.lookup, ps, ps_wolbachia, read.count.threshold, rarefaction.replicates,
+  collection.sites,
+  ps_main, metadata_main, ps_july, metadata_july, ps_grt, metadata_grt, ps_bv, metadata_bv,
+  ps_main_family, ps_rel, df_rel,
+  top_families, plot_composition, df_sample_agg, 
+  plot_composition_grouped_by_host_plant, plot_composition_grouped_by_month,
+  median_dev, plot_composition_grouped_by_dev, composition_figure,
+  ps_rel_family, family_mean_abundances, tax_table_df, top_families_table,
+  ps_bv_rel, mean_abund_bv, ps_bv_pa, bv_summary, bv_summary_sorted,
+  ps_grt_rel, mean_abund_grt, ps_grt_pa, grt_summary, grt_summary_sorted,
+  core.microbiota,
+  combined_summary, target_asvs, df_for_plot_host_shift, plot_host_shift,
+  ps_july_rel, bv_samples, grt_samples, 
+  asv_matrix, prevalence.and.abundance, df_bv, df_grt, plot_df, taxa_matrix, 
+  plot_df, top_asvs, pa_by_host_plot, figure_host_shift,
+  file = "Jhae.microbiome.RData"
+)
 
 # load("Jhae.microbiome.RData", verbose = TRUE)
 

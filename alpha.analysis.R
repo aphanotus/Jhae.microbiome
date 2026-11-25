@@ -20,7 +20,7 @@ setwd("~/Documents/3.research/Jhae.microbiome")
 }
 
 load("Jhae.microbiome.RData", verbose = TRUE)
-# load("alpha.RData", verbose = TRUE)
+# load("alpha.analysis.RData", verbose = TRUE)
 
 # Save the raw alpha diversity
 {
@@ -251,7 +251,7 @@ load("Jhae.microbiome.RData", verbose = TRUE)
     update_theme(legend.position = "none")
     update_theme(axis.ticks = element_blank())
     update_theme(panel.grid.major.x = element_blank())
-    update_theme(strip.text = element_text(size = 12, hjust = 0))
+    update_theme(strip.text = element_text(size = 10, hjust = 0))
     update_theme(strip.background = element_blank())
   }
 
@@ -259,11 +259,16 @@ load("Jhae.microbiome.RData", verbose = TRUE)
   plot.alpha.host <- metadata_july |>
     pivot_longer(cols = all_of(alpha.columns)) |>
     mutate(name = alpha.labels[match(name, alpha.columns)]) |>
+    mutate(host_plant = str_replace(host_plant, "BV", "C. corindum")) |> 
+    mutate(host_plant = str_replace(host_plant, "GRT", "K. paniculata")) |> 
     ggplot(aes(x=host_plant, y=value, fill = host_plant)) +
     facet_wrap(.~name, scales = "free") +
     geom_boxplot(outlier.shape = NA, coef = 0) +
     geom_jitter(width = 0.15, alpha = 0.65, size = 1) +
     scale_fill_manual(values = color.by.plant) +
+    theme(
+      axis.text.x = element_text(face = "italic", angle = 30, hjust = 1, vjust = 1)
+    ) +
     labs(x = NULL, y = "alpha diversity index", title = "Host Plant")
 
   plot.alpha.host
@@ -287,14 +292,14 @@ load("Jhae.microbiome.RData", verbose = TRUE)
 
   # Alpha diversity by scrub_m2
   plot.alpha.scrub <- metadata_main |>
-    ggplot(aes(x = scrub_m2, y = observed_ASVs)) +
+    ggplot(aes(x = scrub_m2/1e5, y = observed_ASVs)) +
     theme(panel.grid.major.x = NULL) + # Reset defaults
     geom_point(aes(color = scrub_m2), alpha = 0.8, size = 2) +
     scale_color_gradient(
       low = color.by.urban[1], high = color.by.urban[2]
     ) +
     geom_smooth(method = "lm", color = "grey35", se = TRUE) +
-    labs(x = expression("Scrub (" * m^2 * ")"), y = "Observed ASVs", title = "Scrub land area")
+    labs(x = "Scrub (ha)", y = "Observed ASVs", title = "Scrub land area")
 
   plot.alpha.scrub
 

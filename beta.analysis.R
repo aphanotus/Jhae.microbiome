@@ -308,7 +308,7 @@ test.betadisp <- function (x, f, exclude.level = NULL, iter = 1e4-1, verbose = F
       scale_color_gradient(low = color.by.urban[2], high = color.by.urban[1]) +
       stat_ellipse(aes(group = green_space_tertile, fill = green_space_tertile),
                    geom = "polygon", alpha = 0.2, color = "gray95") +
-      scale_fill_manual(values = c("Low" = color.by.urban[2], "Medium" = "palegreen3", "High" = color.by.urban[1])) +
+      scale_fill_manual(values = c("Low" = color.by.urban[3], "Medium" = color.by.urban[2], "High" = color.by.urban[1])) +
       coord_fixed()
     pcoa.grt.bray.green_space
 
@@ -317,7 +317,7 @@ test.betadisp <- function (x, f, exclude.level = NULL, iter = 1e4-1, verbose = F
       scale_color_gradient(low = color.by.urban[2], high = color.by.urban[1]) +
       stat_ellipse(aes(group = green_space_tertile, fill = green_space_tertile),
                    geom = "polygon", alpha = 0.2, color = "gray95") +
-      scale_fill_manual(values = c("Low" = color.by.urban[2], "Medium" = "palegreen3", "High" = color.by.urban[1])) +
+      scale_fill_manual(values = c("Low" = color.by.urban[3], "Medium" = color.by.urban[2], "High" = color.by.urban[1])) +
       coord_fixed()
     pcoa.grt.unifrac.green_space
 
@@ -332,7 +332,7 @@ test.betadisp <- function (x, f, exclude.level = NULL, iter = 1e4-1, verbose = F
                    geom = "polygon", alpha = 0.2, color = "gray95") +
       scale_fill_manual(
         name = "Green space tertile", 
-        values = c("Low" = color.by.urban[2], "Medium" = "palegreen3", "High" = color.by.urban[1])
+        values = c("Low" = color.by.urban[3], "Medium" = color.by.urban[2], "High" = color.by.urban[1])
       ) +
       coord_fixed() +
       theme(
@@ -362,7 +362,7 @@ test.betadisp <- function (x, f, exclude.level = NULL, iter = 1e4-1, verbose = F
       scale_color_gradient(low = color.by.urban[1], high = color.by.urban[2]) +
       stat_ellipse(aes(group = intensive_development_tertile, fill = intensive_development_tertile),
                    geom = "polygon", alpha = 0.2, color = "gray95") +
-      scale_fill_manual(values = c("Low" = color.by.urban[1], "Medium" = "palegreen3", "High" = color.by.urban[2])) +
+      scale_fill_manual(values = c("Low" = color.by.urban[1], "Medium" = color.by.urban[2], "High" = color.by.urban[3])) +
       coord_fixed()
     pcoa.grt.bray.intensive_development
 
@@ -371,7 +371,7 @@ test.betadisp <- function (x, f, exclude.level = NULL, iter = 1e4-1, verbose = F
       scale_color_gradient(low = color.by.urban[1], high = color.by.urban[2]) +
       stat_ellipse(aes(group = intensive_development_tertile, fill = intensive_development_tertile),
                    geom = "polygon", alpha = 0.2, color = "gray95") +
-      scale_fill_manual(values = c("Low" = color.by.urban[1], "Medium" = "palegreen3", "High" = color.by.urban[2])) +
+      scale_fill_manual(values = c("Low" = color.by.urban[1], "Medium" = color.by.urban[2], "High" = color.by.urban[3])) +
       coord_fixed()
     pcoa.grt.unifrac.intensive_development
 
@@ -387,7 +387,7 @@ test.betadisp <- function (x, f, exclude.level = NULL, iter = 1e4-1, verbose = F
                    geom = "polygon", alpha = 0.2, color = "gray95") +
       scale_fill_manual(
         name = "Intensive development terile", 
-        values = c("Low" = color.by.urban[1], "Medium" = "palegreen3", "High" = color.by.urban[2])
+        values = c("Low" = color.by.urban[1], "Medium" = color.by.urban[2], "High" = color.by.urban[3])
       ) +
       coord_fixed() +
       theme(
@@ -469,7 +469,6 @@ test.betadisp <- function (x, f, exclude.level = NULL, iter = 1e4-1, verbose = F
 }
 
 {
-  
   adonis.list <- list(
     Bray_Curtis__full_model = perm_bray_full,
     UniFrac__full_model = perm_unifrac_full,
@@ -495,7 +494,6 @@ test.betadisp <- function (x, f, exclude.level = NULL, iter = 1e4-1, verbose = F
     ) |> 
     select(-listname) |> 
     relocate(data_set)
-  
   
   full.model.adonis.results
   

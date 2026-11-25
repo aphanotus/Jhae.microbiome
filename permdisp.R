@@ -110,7 +110,7 @@ load("beta.analysis.RData", verbose = TRUE)
     ggplot(aes(x = intensive_development, y = distance_to_centroid, fill = intensive_development)) +
     geom_boxplot(alpha = 0.7, outlier.shape = NA) +
     geom_jitter(width = 0.2, alpha = 0.6) +
-    scale_fill_manual(values = c(color.by.urban[1],"palegreen3",color.by.urban[2])) +
+    scale_fill_manual(values = color.by.urban) +
     ylim(c(0,1)) +
     labs(
       title = "Bray-Curtis dissimilarity",
@@ -130,7 +130,7 @@ load("beta.analysis.RData", verbose = TRUE)
     ggplot(aes(x = intensive_development, y = distance_to_centroid, fill = intensive_development)) +
     geom_boxplot(alpha = 0.7, outlier.shape = NA) +
     geom_jitter(width = 0.2, alpha = 0.6) +
-    scale_fill_manual(values = c(color.by.urban[1],"palegreen3",color.by.urban[2])) +
+    scale_fill_manual(values = color.by.urban) +
     ylim(c(0,1)) +
     labs(
       title = "unweighted UniFrac",
@@ -150,7 +150,7 @@ load("beta.analysis.RData", verbose = TRUE)
     ggplot(aes(x = intensive_development, y = distance_to_centroid, fill = intensive_development)) +
     geom_boxplot(alpha = 0.7, outlier.shape = NA) +
     geom_jitter(width = 0.2, alpha = 0.6) +
-    scale_fill_manual(values = c(color.by.urban[1],"palegreen3",color.by.urban[2])) +
+    scale_fill_manual(values = color.by.urban) +
     ylim(c(0,1)) +
     labs(
       title = "Rao's dissimilarity",
@@ -165,15 +165,15 @@ load("beta.analysis.RData", verbose = TRUE)
 ################################################################################
 # Assemble final plot
 
-beta_dispersion_figure <- (
+beta.dispersion.figure <- (
   plot_intensive_development_disp_bray | plot_intensive_development_disp_unifrac | plot_intensive_development_disp_rao
 ) +
   plot_annotation(tag_levels = 'A')
-beta_dispersion_figure
+beta.dispersion.figure
 
 ggsave(
   filename = "plots/Fig6.beta.dispersion.png",
-  plot = beta_dispersion_figure,
+  plot = beta.dispersion.figure,
   width = 6.5, height = 2.5, scale = 1.75,
   dpi = 600, bg = "white"
 )
@@ -190,6 +190,6 @@ save(
   dispersion_bray_for_plot, plot_intensive_development_disp_bray, 
   dispersion_unifrac_for_plot, plot_intensive_development_disp_unifrac,
   dispersion_rao_for_plot, plot_intensive_development_disp_rao,
-  beta_dispersion_figure,
+  beta.dispersion.figure,
   file = "permdisp.RData"
 )
